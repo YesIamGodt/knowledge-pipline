@@ -26,33 +26,28 @@ import os
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Load LLM configuration
-try:
-    from core.llm_config import LLMConfig
+# LLM configuration — initialized lazily in run_lint() to allow --help without config
+client = None
+model = None
+use_openai = False
+
+
+def _init_llm():
+    """Initialize LLM client. Must be called before any LLM operation."""
+    global client, model, use_openai
+    from core.llm_config import require_llm_config, LLMConfig
+    require_llm_config()
+
     llm_config = LLMConfig()
-    if llm_config.is_configured():
-        cfg = llm_config.get_config()
-        os.environ["OPENAI_API_KEY"] = cfg.get("OPENAI_API_KEY", "")
-        # Use OpenAI-compatible client
-        import openai
-        client = openai.OpenAI(
-            base_url=cfg.get("LLM_BASE_URL"),
-            api_key=cfg.get("OPENAI_API_KEY")
-        )
-        model = cfg.get("LLM_MODEL", "gpt-4o-mini")
-        use_openai = True
-    else:
-        # Fallback to Anthropic
-        import anthropic
-        client = anthropic.Anthropic()
-        model = "claude-sonnet-4-6"
-        use_openai = False
-except ImportError:
-    # Fallback to Anthropic
-    import anthropic
-    client = anthropic.Anthropic()
-    model = "claude-sonnet-4-6"
-    use_openai = False
+    cfg = llm_config.get_config()
+    import openai
+    client = openai.OpenAI(
+        base_url=cfg.get("LLM_BASE_URL"),
+        api_key=cfg.get("OPENAI_API_KEY")
+    )
+    model = cfg.get("LLM_MODEL", "gpt-4o-mini")
+    use_openai = True
+
 
 REPO_ROOT = Path(__file__).parent.parent
 WIKI_DIR = REPO_ROOT / "wiki"
@@ -191,6 +186,9 @@ def check_claims_contradictions() -> list[str]:
 
 
 def run_lint():
+    # ========== 第一步：检查 LLM 配置 ==========
+    _init_llm()
+
     pages = all_wiki_pages()
     today = date.today().isoformat()
 

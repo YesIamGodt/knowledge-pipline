@@ -406,13 +406,17 @@ def build_inferred_edges(pages: list[Path], existing_edges: list[dict], cache: d
         for future in as_completed(futures):
             p = futures[future]
             completed += 1
-            ts = time.strftime("%H:%M:%S")
             try:
-                edges = future.result()
-                new_edges.extend(edges)
-                print(f"    [{ts}] [{completed}/{len(changed_pages)}] {page_id(p)}: +{len(edges)} 条边", flush=True)
+                page_edges = future.result()
+                new_edges.extend(page_edges)
+                # 只打印找到新边的页面，避免刷屏 +0
+                if page_edges:
+                    print(f"    ✨ {page_id(p)}: +{len(page_edges)} 条新推断边", flush=True)
+                # 每 10 个页面或最后一个显示进度
+                if completed % 10 == 0 or completed == len(changed_pages):
+                    print(f"    [{completed}/{len(changed_pages)}] 已处理... 累计推断: {len(new_edges)} 条边", flush=True)
             except Exception as e:
-                print(f"    [{ts}] [{completed}/{len(changed_pages)}] {page_id(p)}: 失败 {e}", flush=True)
+                print(f"    ⚠️ {page_id(p)}: {e}", flush=True)
 
     return new_edges
 
@@ -516,7 +520,8 @@ const network = new vis.Network(container, {{ nodes, edges }}, {{
     shape: "dot",
     size: 14,
     font: {{ color: "#eee", size: 14, face: "Microsoft YaHei" }},
-    borderWidth: 2,
+    borderWidth: 3,
+    borderWidthSelected: 5,
   }},
   edges: {{
     width: 1.5,
@@ -585,11 +590,9 @@ def build_graph(infer: bool = True, open_browser: bool = False):
         return
 
     # Check LLM configuration if inference is enabled
-    if infer and llm_config and not llm_config.is_configured():
-        print("⚠️  LLM 未配置，无法进行语义推理。")
-        print("   请先运行维基命令（例如：'ingest <file>'）来配置 LLM。")
-        print("   或使用 --no-infer 跳过语义推理。")
-        return
+    if infer:
+        from core.llm_config import require_llm_config
+        require_llm_config()
 
     print(f"🔨 正在从 {len(pages)} 个维基页面构建知识图谱...")
     GRAPH_DIR.mkdir(parents=True, exist_ok=True)
@@ -598,18 +601,18 @@ def build_graph(infer: bool = True, open_browser: bool = False):
 
     # Pass 1: extracted edges
     t1 = time.time()
-    print("  第一遍：提取 wikilinks...")
+    print("  📎 第一遍：提取 [[wikilinks]]...")
     nodes = build_nodes(pages)
     edges = build_extracted_edges(pages)
-    print(f"  → {len(edges)} 条提取的边 ({time.time()-t1:.1f}s)")
+    print(f"  ✅ 提取完成: {len(edges)} 条边 ({time.time()-t1:.1f}s)")
 
     # Pass 2: inferred edges
     if infer:
         t2 = time.time()
-        print("  第二遍：推断语义关系（并发）...")
+        print("  🧠 第二遍：推断语义关系（并发）...")
         inferred = build_inferred_edges(pages, edges, cache)
         edges.extend(inferred)
-        print(f"  → {len(inferred)} 条推断的边 ({time.time()-t2:.1f}s)")
+        print(f"  ✅ 推断完成: {len(inferred)} 条新边 ({time.time()-t2:.1f}s)")
         save_cache(cache)
 
     # Community detection
@@ -618,15 +621,23 @@ def build_graph(infer: bool = True, open_browser: bool = False):
     communities = detect_communities(nodes, edges)
     for node in nodes:
         comm_id = communities.get(node["id"], -1)
+        # Keep type-based color as primary; use community color as border
         if comm_id >= 0:
-            node["color"] = COMMUNITY_COLORS[comm_id % len(COMMUNITY_COLORS)]
-        node["group"] = comm_id
+            comm_color = COMMUNITY_COLORS[comm_id % len(COMMUNITY_COLORS)]
+            node["color"] = {
+                "background": TYPE_COLORS.get(node["type"], TYPE_COLORS["unknown"]),
+                "border": comm_color,
+                "highlight": {"background": TYPE_COLORS.get(node["type"], TYPE_COLORS["unknown"]), "border": comm_color},
+                "hover": {"background": TYPE_COLORS.get(node["type"], TYPE_COLORS["unknown"]), "border": comm_color},
+            }
+        node["community"] = comm_id
+        node["group"] = node["type"]  # vis.js group by type, not community
 
     # Save graph.json（包含社区信息）
     # 构建社区摘要
     community_summary = {}
     for node in nodes:
-        cid = node.get("group", -1)
+        cid = node.get("community", -1)
         if cid >= 0:
             if cid not in community_summary:
                 community_summary[cid] = []
@@ -654,6 +665,13 @@ def build_graph(infer: bool = True, open_browser: bool = False):
     append_log(f"## [{today}] graph | 知识图谱已重建\n\n{len(nodes)} 个节点, {len(edges)} 条边 ({extracted_count} 条提取, {inferred_count} 条推断, {ambiguous_count} 条模糊).")
 
     total_time = time.time() - t0
+    print(f"\n📊 图谱统计:")
+    print(f"   提取边: {extracted_count} 条 (来自 [[wikilinks]])")
+    if infer:
+        print(f"   推断边: {inferred_count} 条 (LLM 语义推断)")
+        if ambiguous_count:
+            print(f"   模糊边: {ambiguous_count} 条")
+    print(f"   总  计: {len(edges)} 条边, {len(nodes)} 个节点, {len(community_summary)} 个社区")
     print(f"\n✅ 图谱构建完成 (总耗时 {total_time:.1f}s)")
 
     if open_browser:

@@ -1,6 +1,6 @@
-检查 LLM 维基的健康状况。
+检查知识维基的健康状况。
 
-使用方法：/pipeline-lint
+使用方法：/pipline-lint
 
 遵循 CLAUDE.md 中定义的检查工作流程：
 

@@ -1,11 +1,12 @@
 <div align="center">
 
-# 🧠 Knowledge Pipeline
+# 🧠 Knowledge Pipline
 
 **别再让 AI 帮你搜索了。让它帮你理解。**
 
-[![npm](https://img.shields.io/npm/v/create-data-pipeline?color=%2300b894&label=npx)](https://www.npmjs.com/package/create-data-pipeline)
+[![GitHub](https://img.shields.io/github/stars/YesIamGodt/knowledge-pipline?style=social)](https://github.com/YesIamGodt/knowledge-pipline)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Skills](https://img.shields.io/badge/npx%20skills%20add-knowledge--pipline-00b894)](https://skills.sh)
 
 把任何文档丢给它 — PDF、图片、视频、Word、Excel — 它不只是"总结"，而是**编译成结构化知识**，自动发现跨文档矛盾、追踪实体演化、构建可交互的知识图谱。
 
@@ -21,9 +22,9 @@
 
 行。如果你只有一份文档，只问一次。
 
-但当你有 **50 份文档**，跨越 **3 个月**，涉及 **12 个人物** 和 **8 个核心概念** — ChatGPT 给你的是一个聊天记录，Knowledge Pipeline 给你的是一座**活的知识库**：
+但当你有 **50 份文档**，跨越 **3 个月**，涉及 **12 个人物** 和 **8 个核心概念** — ChatGPT 给你的是一个聊天记录，Knowledge Pipline 给你的是一座**活的知识库**：
 
-| | ChatGPT / Claude 直接问 | Knowledge Pipeline |
+| | ChatGPT / Claude 直接问 | Knowledge Pipline |
 |---|---|---|
 | 📄 读文档 | 每次会话重新上传 | **一次摄入，永久积累** |
 | 🔗 跨文档关联 | 你自己拼凑 | **自动构建实体和概念网络** |
@@ -33,27 +34,27 @@
 | 📊 可视化 | 无 | **交互式知识图谱（vis.js）** |
 | 💾 持久化 | 聊天记录（丢了就没了） | **结构化 Markdown 维基** |
 
-**一句话：ChatGPT 是你的对话工具。Knowledge Pipeline 是你的第二大脑。**
+**一句话：ChatGPT 是你的对话工具。Knowledge Pipline 是你的第二大脑。**
 
 ---
 
 ## 🚀 快速开始
 
-### 方式一：npx 一键安装（推荐）
+### 方式一：npx skills add 一键安装（推荐）
 
 ```bash
-npx create-data-pipeline
+npx skills add YesIamGodt/knowledge-pipline
 ```
 
-自动安装到 `~/.claude/skills/data-pipeline/`，Claude Code 启动后立即可用。
+自动安装到 `~/.claude/skills/knowledge-pipline/`，Claude Code 启动后立即可用。
 
 ### 方式二：手动安装
 
 ```bash
-git clone https://github.com/YesIamGodt/knowledge-pipeline.git
+git clone https://github.com/YesIamGodt/knowledge-pipline.git
 ```
 
-将整个目录复制到 `~/.claude/skills/data-pipeline/`，或者直接在项目目录中使用。
+将整个目录复制到 `~/.claude/skills/knowledge-pipline/`，或者直接在项目目录中使用。
 
 ### 前置要求
 
@@ -76,7 +77,7 @@ pip install opencv-python
 首次使用时，在 Claude Code 中说 **"配置 LLM API"**，或手动创建配置文件：
 
 ```json
-// ~/.claude/skills/data-pipeline/.llm_config.json
+// ~/.claude/skills/knowledge-pipline/.llm_config.json
 {
   "base_url": "https://api.openai.com/v1",
   "model": "gpt-4o-mini",
@@ -125,7 +126,7 @@ pip install opencv-python
 
 **普通工具**：每次摄入覆盖旧内容。
 
-**Knowledge Pipeline**：如果"OpenAI"的实体页面已存在，新文档的信息会被**智能合并**进去 — 保留旧信息、追加新发现、标注矛盾。你的知识只增不减。
+**Knowledge Pipline**：如果"OpenAI"的实体页面已存在，新文档的信息会被**智能合并**进去 — 保留旧信息、追加新发现、标注矛盾。你的知识只增不减。
 
 ### ⚡ 主动矛盾检测
 
@@ -279,20 +280,20 @@ python tools/pipeline_query.py "AI 对就业市场的影响是什么？" --auto-
 # → 展示两篇文章的不同立场 + 共识与分歧分析
 ```
 
-### 示例 4：在 Claude Code 中用自然语言
+### 示例 4：在 Claude Code 中用斜杠命令
 
 ```
-你：摄入 raw/examples/transformer-overview.md
+你：/pipline-ingest raw/examples/transformer-overview.md
 AI：✅ 完成。摄入: Transformer Architecture Overview  (总耗时 12.3s)
     📝 新建 3 个实体/概念页面
 
-你：查询 注意力机制为什么重要？
+你：/pipline-query 注意力机制为什么重要？
 AI：## 注意力机制的重要性
     ...（带 [[wikilink]] 引用的结构化回答）...
     ## 共识与分歧
     ✅ 多源共识：自注意力提升并行效率
     
-你：构建知识图谱
+你：/pipline-graph
 AI：✅ 图谱已构建。12 节点，18 边，3 个社区
     → 打开 graph/graph.html 查看
 ```
@@ -301,7 +302,19 @@ AI：✅ 图谱已构建。12 节点，18 边，3 个社区
 
 ## ⚙️ 命令参考
 
+### 斜杠命令（Claude Code）
+
 | 命令 | 说明 |
+|------|------|
+| `/pipline-ingest <文件>` | 摄入文档到知识维基 |
+| `/pipline-query <问题>` | 多源聚合查询 |
+| `/pipline-lint` | 检查孤立页面、断链、矛盾 |
+| `/pipline-graph` | 生成交互式知识图谱 |
+| `/pipline-config` | 配置 LLM API |
+
+### 自然语言触发
+
+| 说什么 | 做什么 |
 |------|------|
 | `摄入 <文件>` / `ingest <file>` | 摄入文档到知识维基 |
 | `查询 <问题>` / `query: <question>` | 多源聚合查询 |

@@ -130,7 +130,7 @@ last_updated: ${new Date().toISOString().slice(0, 10)}
 
 # 知识概览
 
-尚无摄入的文档。使用 \`/pipeline-ingest <文件路径>\` 开始摄入。
+尚无摄入的文档。使用 \`/pipline-ingest <文件路径>\` 开始摄入。
 `,
   };
 

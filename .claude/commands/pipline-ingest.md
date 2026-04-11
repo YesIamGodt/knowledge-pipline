@@ -1,6 +1,6 @@
-将源文档摄入到 LLM 维基中。
+将源文档摄入到知识维基中。
 
-使用方法：/pipeline-ingest $ARGUMENTS
+使用方法：/pipline-ingest $ARGUMENTS
 
 $ARGUMENTS 应该是 raw/ 目录中的文件路径，例如：`raw/articles/my-article.md`
 

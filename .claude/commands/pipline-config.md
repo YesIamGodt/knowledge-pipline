@@ -1,6 +1,6 @@
-配置 pipline LLM API 相关信息，以及 Python 路径配置。
+配置 Knowledge Pipline 的 LLM API 信息和 Python 路径。
 
-使用方法：/pipeline-config
+使用方法：/pipline-config
 
 ---
 
@@ -137,7 +137,7 @@ Claude Code 会直接检查以下配置文件：
 
 **使用配置的 Python：**
 
-其他命令（如 `/pipeline-graph`）需要 Python 时：
+其他命令（如 `/pipline-graph`）需要 Python 时：
 1. 首先读取 `.claude_settings.json` 中的 `python_path`
 2. 如果有配置，直接使用
-3. 如果没有配置，提示用户运行 `/pipeline-config` 配置 Python 路径
+3. 如果没有配置，提示用户运行 `/pipline-config` 配置 Python 路径

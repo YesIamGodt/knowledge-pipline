@@ -1,6 +1,6 @@
-构建 LLM 维基知识图谱。
+构建知识维基图谱。
 
-使用方法：/pipeline-graph
+使用方法：/pipline-graph
 
 首先尝试从配置中读取 Python 路径：
 
@@ -8,7 +8,7 @@
 
 1. **检查配置文件**：首先检查项目根目录下的 `.claude_settings.json` 是否有 `python_path` 配置
 2. **验证 Python 路径**：如果配置了路径，测试它是否可用
-3. **如果没有配置或路径无效**：提示用户运行 `/pipeline-config` 配置 Python 路径
+3. **如果没有配置或路径无效**：提示用户运行 `/pipline-config` 配置 Python 路径
 
 **第二步：尝试运行 graph 工具**
 

@@ -26,28 +26,28 @@ Sure. If you have one document and one question.
 
 But when you have **50 documents** spanning **3 months**, involving **12 people** and **8 core concepts** — ChatGPT gives you a chat log. Knowledge Pipline gives you a **living knowledge base**:
 
-| | ChatGPT / Claude Direct | Knowledge Pipline |
+| | ChatGPT / Claude File Upload (RAG) | Knowledge Pipline |
 |---|---|---|
-| 📄 Read docs | Re-upload every session | **Ingest once, accumulate forever** |
-| 🔗 Cross-doc links | You piece it together | **Auto-builds entity & concept networks** |
-| ⚠️ Contradiction detection | Never tells you | **Reports conflicts on ingest** |
-| 🔄 Knowledge fusion | Doesn't exist | **New docs auto-merge into existing pages** |
-| 🧭 Multi-source perspectives | One answer | **Shows each source's stance + consensus & divergence** |
+| 📄 Read docs | Re-upload every session, no accumulation | **Ingest once, accumulate forever** |
+| 🔗 Cross-doc links | Only retrieves relevant fragments to stitch | **Auto-builds entity & concept networks** |
+| ⚠️ Contradiction detection | Won't proactively find contradictions | **Reports conflicts on ingest** |
+| 🔄 Knowledge fusion | Doesn't exist, independent retrieval each time | **New docs auto-merge into existing pages** |
+| 🧭 Multi-source perspectives | Only gives one synthesized answer | **Shows each source's stance + consensus & divergence** |
 | 📊 Visualization | None | **Interactive knowledge graph (vis.js)** |
-| 💾 Persistence | Chat history (gone if lost) | **Structured Markdown wiki** |
+| 💾 Intermediate repr. | Black-box vectors, not browsable | **Structured Markdown wiki (Obsidian-compatible)** |
 
 **In one sentence: ChatGPT is your chat tool. Knowledge Pipline is your second brain.**
 
-### 🎯 Real-World Case: See the Difference
+### 🎯 Real-World Case: Deep Pattern Mining
 
-We ingested 18 real documents — medical case reports, CS master's theses, cloud security audits, a source code leak incident, street photos, a concert video — spanning wildly different domains.
+We ingested 18 real documents — medical case reports, CS master's theses, a source code leak incident, street photos, a concert video — spanning wildly different domains.
 
-Then asked a question that **no single document directly answers**:
+Then asked a question that **no single document directly discusses**:
 
-> **"Will AI really cause programmer unemployment in 2026? Give a detailed answer."**
+> **"Will AI really cause programmer unemployment in 2026?"**
 
-**What ChatGPT does:**
-You upload 18 files one by one (or they don't even fit), it reads and forgets, gives you a generic answer. Next time you ask, it remembers nothing.
+**What RAG (ChatGPT/Claude file upload) does:**
+Retrieves text chunks most similar to "programmer unemployment" — but none of the 18 documents discuss this topic. RAG can't find relevant passages, so it falls back to the model's own knowledge for a generic answer.
 
 **What Knowledge Pipline does:**
 
@@ -60,44 +60,64 @@ AI:  ✅ Batch ingest complete
 You: /pipline-query "Will AI really cause programmer unemployment in 2026?"
 ```
 
-It doesn't answer from thin air — it extracts evidence from **multiple completely different domains** and cross-analyzes:
+It doesn't search text fragments — it discovers deep patterns in the **pre-compiled concept network and entity relationships**:
 
 ```markdown
 ## AI's Impact on Programmer Employment (Based on Wiki Knowledge Base)
 
-### Direct Evidence from the Wiki
+### Deep Pattern Discovery
 
-1. **Claude Code's Real Capabilities** ([[claude-code-leak]])
-   The March 2026 source code leak revealed: Claude Code is already a $2.5B ARR product
-   handling complex programming tasks. AI coding tools have entered mass commercialization.
+1. **The line between "automatable" and "not automatable"**
+   Two master's theses ([[group-fusion-method]] [[gnn-based-multi-behavior]])
+   core work is implementing algorithms: MBWGCN model, MaxQ/MaxS group fusion
+   algorithms, GNN training pipelines. The essence of this work is "translating
+   math formulas into code" — exactly what AI coding tools excel at.
+   
+   But in the same papers, **problem discovery and modeling** — like realizing
+   that "similarity between requirements is asymmetric" ([[AsymmetricSimilarity]]),
+   or modeling recommendation systems as multi-behavior graph structures —
+   this kind of creative insight cannot currently be automated.
 
-2. **Academic Signals** ([[group-fusion-method]] [[gnn-based-multi-behavior]])
-   Two 2023 master's theses still completed algorithm design traditionally,
-   but the coding work (data processing, model implementation) is exactly
-   what AI excels at replacing.
+2. **AI coding tools are already big business**
+   The [[Claude Code]] source code leak revealed: this is a $2.5B ARR product
+   with unreleased features like KAIROS (daemon) and ULTRAPLAN (cloud planning).
+   AI coding tools aren't lab toys — they're already replacing development work
+   at scale.
+   
+   But the leak itself ([[SupplyChainSecurity]]) also proves: production
+   engineering judgment — "should we exclude source maps in .npmignore" —
+   this kind of context-aware decision-making is something AI itself still
+   gets wrong.
 
-3. **Enterprise Security Audits Still Need Human Judgment** ([[security-incident-brief]])
-   Cloud security incidents involving IAM policy audits and change management
-   require deep business context understanding — not replaceable by AI short-term.
-
-4. **Multimodal Understanding Is Maturing** ([[beibei-5-scenic-spot-portrait]]
-   [[hong-kong-top-mall-street-scene]] [[juchang-starlight-market-concert]])
-   The system successfully understood photos and video content, showing AI's
-   capability boundary is expanding from "writing code" to "understanding the world".
+3. **Cross-domain validation: Medicine vs Programming**
+   Medical case reports ([[RonT Syndrome]] [[PVC]]) show that a clinician's
+   judgment process — whether coupling intervals are fixed, whether lidocaine
+   is needed — depends entirely on experience and context.
+   This is isomorphic to "senior programmers judging system architecture":
+   **work requiring contextual reasoning won't disappear; work that only
+   requires execution will be replaced.**
 
 ### Overall Verdict
 
-Not "unemployment" but "transformation":
-- ✅ Consensus: Junior coding work (CRUD, data processing) will significantly decrease
-- ⚠️ Divergence: Whether high-level system design will be affected
-- ❓ Unknown: When AI-native development paradigms will become mainstream
+Not "unemployment" but "layered elimination":
+- ✅ Consensus: Algorithm implementation and data processing ("translational coding") will sharply decrease
+- ⚠️ Divergence: Problem modeling and creative insight are currently safe (asymmetric similarity discovery can't be automated)
+- ❓ Signal: AI tools still have engineering blind spots (source map leak = AI can't replace engineering judgment)
 ```
 
-**The key difference:**
-- ChatGPT can only give generic answers from its training data
-- Knowledge Pipline extracts evidence from **your own documents**, even when those documents are completely unrelated to "programmer unemployment" — it discovers **hidden connections** between Claude Code commercialization data, academic paper coding patterns, and enterprise security audit human requirements
+**Why can't RAG do this?**
 
-This is the fundamental difference between a "knowledge pipeline" and a "chat tool": **it doesn't answer questions — it finds answers within your knowledge system.**
+Because RAG works by "retrieving text fragments" — it searches the vector store for passages most similar to "programmer unemployment". But none of the 18 documents discuss programmer unemployment, so RAG can't retrieve useful content.
+
+Knowledge Pipline can answer because ingestion has already compiled documents into a **structured concept network**:
+
+- Thesis MBWGCN code implementation → concept pages [[GraphNeuralNetwork]], [[ServiceComputing]]
+- Claude Code's ARR data → entity page [[Claude Code]], concept page [[SupplyChainSecurity]]
+- Cardiac arrhythmia clinical judgment → concept pages [[RonT Syndrome]], [[CouplingInterval]]
+
+At query time, the system doesn't search text fragments — it **reasons** between concept and entity pages: the thesis's "coding work" and Claude Code's "AI programming capability" connect through the concept network; medicine's "clinical judgment" and engineering's "architecture decisions" relate through their shared trait of "contextual reasoning".
+
+**This is the fundamental difference: RAG searches for answers in document fragments. Knowledge Pipline reasons for answers within your knowledge system.**
 
 ---
 
@@ -259,9 +279,9 @@ Answers include not just conclusions but **multi-source perspectives**:
 ```
 
 Generates a self-contained `graph.html` — open in browser to interactively explore:
-- Nodes colored by type (source / entity / concept)
+- Node fill color by type (source / entity / concept)
+- Node border color by community cluster (Louvain detection)
 - Edges distinguish explicit links from inferred relationships
-- Louvain community detection for auto-clustering
 - Search and zoom support
 
 ---

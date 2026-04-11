@@ -520,7 +520,8 @@ const network = new vis.Network(container, {{ nodes, edges }}, {{
     shape: "dot",
     size: 14,
     font: {{ color: "#eee", size: 14, face: "Microsoft YaHei" }},
-    borderWidth: 2,
+    borderWidth: 3,
+    borderWidthSelected: 5,
   }},
   edges: {{
     width: 1.5,
@@ -622,15 +623,23 @@ def build_graph(infer: bool = True, open_browser: bool = False):
     communities = detect_communities(nodes, edges)
     for node in nodes:
         comm_id = communities.get(node["id"], -1)
+        # Keep type-based color as primary; use community color as border
         if comm_id >= 0:
-            node["color"] = COMMUNITY_COLORS[comm_id % len(COMMUNITY_COLORS)]
-        node["group"] = comm_id
+            comm_color = COMMUNITY_COLORS[comm_id % len(COMMUNITY_COLORS)]
+            node["color"] = {
+                "background": TYPE_COLORS.get(node["type"], TYPE_COLORS["unknown"]),
+                "border": comm_color,
+                "highlight": {"background": TYPE_COLORS.get(node["type"], TYPE_COLORS["unknown"]), "border": comm_color},
+                "hover": {"background": TYPE_COLORS.get(node["type"], TYPE_COLORS["unknown"]), "border": comm_color},
+            }
+        node["community"] = comm_id
+        node["group"] = node["type"]  # vis.js group by type, not community
 
     # Save graph.json（包含社区信息）
     # 构建社区摘要
     community_summary = {}
     for node in nodes:
-        cid = node.get("group", -1)
+        cid = node.get("community", -1)
         if cid >= 0:
             if cid not in community_summary:
                 community_summary[cid] = []

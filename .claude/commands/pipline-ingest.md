@@ -2,11 +2,19 @@
 
 使用方法：/pipline-ingest $ARGUMENTS
 
-$ARGUMENTS 应该是 raw/ 目录中的文件路径，例如：`raw/articles/my-article.md`
+$ARGUMENTS 应该是文件的**绝对路径**，例如：`D:\docs\my-paper.pdf` 或 `/home/user/docs/report.md`
+
+**技能目录定位**：
+- 首先检查 `~/.agents/skills/knowledge-pipline/`
+- 然后检查 `~/.claude/skills/knowledge-pipline/`
+- 最后检查当前项目目录
 
 **使用强大的 Python 脚本来处理：**
 
-1. **首先尝试使用 `tools/pipeline_ingest.py` 执行**：
+1. **首先尝试使用 Python 脚本执行**：
+   ```bash
+   python <skill-dir>/tools/pipeline_ingest.py $ARGUMENTS
+   ```
    - 支持多种文件格式（图片、PDF、DOCX、XLSX、视频等）
    - PDF 默认使用 `balanced` 策略：文本提取 + 多图智能理解
    - 多图 PDF 会执行：图片去重、重要性排序、页内文本上下文融合
@@ -34,8 +42,8 @@ $ARGUMENTS 应该是 raw/ 目录中的文件路径，例如：`raw/articles/my-a
 
 **执行命令**：
 ```bash
-# 使用完整的 Python 脚本
-python tools/pipeline_ingest.py $ARGUMENTS
+# 定位技能目录，然后执行
+python <skill-dir>/tools/pipeline_ingest.py $ARGUMENTS
 ```
 
 **详细流程**（由 Python 脚本执行）：

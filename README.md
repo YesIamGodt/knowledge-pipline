@@ -46,15 +46,27 @@
 npx skills add YesIamGodt/knowledge-pipline
 ```
 
-自动安装到 `~/.claude/skills/knowledge-pipline/`，Claude Code 启动后立即可用。
+自动安装到 `~/.agents/skills/knowledge-pipline/`（并 symlink 到 `~/.claude/skills/`），Claude Code 启动后立即可用。
+
+#### 安装斜杠命令（重要！）
+
+`npx skills add` 会安装技能文件，但**不会自动注册斜杠命令**。安装后运行：
+
+```bash
+node ~/.agents/skills/knowledge-pipline/scripts/install-commands.mjs
+```
+
+这会将四个斜杠命令注册到 `~/.claude/commands/`，让你可以在任何项目中使用 `/pipline-ingest`、`/pipline-query`、`/pipline-graph`、`/pipline-lint`。
 
 ### 方式二：手动安装
 
 ```bash
 git clone https://github.com/YesIamGodt/knowledge-pipline.git
+cd knowledge-pipline
+node scripts/install-commands.mjs
 ```
 
-将整个目录复制到 `~/.claude/skills/knowledge-pipline/`，或者直接在项目目录中使用。
+将仓库 clone 到本地，运行安装脚本注册斜杠命令。
 
 ### 前置要求
 
@@ -302,25 +314,73 @@ AI：✅ 图谱已构建。12 节点，18 边，3 个社区
 
 ## ⚙️ 命令参考
 
-### 斜杠命令（Claude Code）
+安装后，你将获得 **四个核心斜杠命令**，在 Claude Code 任意项目中可用：
 
-| 命令 | 说明 |
+### 📥 `/pipline-ingest` — 摄入文档
+
+将文档摄入到知识维基。支持 PDF、图片、视频、Word、Excel、PPT、HTML、Markdown 等格式。
+
+```bash
+/pipline-ingest "D:\docs\research-paper.pdf"
+/pipline-ingest "/home/user/meeting-notes.docx"
+/pipline-ingest "C:\Users\me\Desktop\screenshot.png"
+```
+
+**必须使用绝对路径**。摄入时自动执行：
+- 解析多模态内容（文本 + 图片 + 表格）
+- 知识融合：新信息合并到已有实体/概念页面
+- 主动矛盾检测：与已有 claims 对比，报告冲突
+- 更新索引、概览、日志
+
+### 🔍 `/pipline-query` — 查询维基
+
+基于已摄入的文档进行多源聚合查询。
+
+```bash
+/pipline-query "transformer 模型的核心创新是什么？"
+/pipline-query "各来源对 AI 安全的观点有什么分歧？"
+```
+
+查询结果包含：
+- **多源视角**：每个源文档对同一问题的不同观点
+- **共识与分歧**：多源一致 ✅ / 观点分歧 ⚠️ / 单源独有 ❓
+- **[[wikilink]]** 引用到具体页面
+
+### 📊 `/pipline-graph` — 构建知识图谱
+
+生成交互式 vis.js 知识图谱可视化。
+
+```bash
+/pipline-graph
+```
+
+输出：
+- `graph/graph.json` — 节点 + 边 + 社区数据
+- `graph/graph.html` — 浏览器打开即可交互探索
+
+### 🏥 `/pipline-lint` — 维基健康检查
+
+检查知识维基的完整性和一致性。
+
+```bash
+/pipline-lint
+```
+
+检查项：
+- **孤立页面** — 无入链的页面
+- **断链** — 指向不存在页面的 [[wikilink]]
+- **矛盾** — 跨页面声明冲突
+- **缺失实体** — 被多次提及但无专属页面
+- **数据空白** — 建议补充的新源
+
+### 自然语言触发（也支持）
+
+| 说什么 | 等同于 |
 |------|------|
-| `/pipline-ingest <文件>` | 摄入文档到知识维基 |
-| `/pipline-query <问题>` | 多源聚合查询 |
-| `/pipline-lint` | 检查孤立页面、断链、矛盾 |
-| `/pipline-graph` | 生成交互式知识图谱 |
-| `/pipline-config` | 配置 LLM API |
-
-### 自然语言触发
-
-| 说什么 | 做什么 |
-|------|------|
-| `摄入 <文件>` / `ingest <file>` | 摄入文档到知识维基 |
-| `查询 <问题>` / `query: <question>` | 多源聚合查询 |
-| `检查` / `lint` | 检查孤立页面、断链、矛盾 |
-| `构建图谱` / `build graph` | 生成交互式知识图谱 |
-| `配置` / `config` | 配置 LLM API |
+| `摄入 <文件>` / `ingest <file>` | `/pipline-ingest` |
+| `查询 <问题>` / `query: <question>` | `/pipline-query` |
+| `构建图谱` / `build graph` | `/pipline-graph` |
+| `检查` / `lint` | `/pipline-lint` |
 
 ### Python CLI
 

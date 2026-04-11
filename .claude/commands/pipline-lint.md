@@ -2,7 +2,17 @@
 
 使用方法：/pipline-lint
 
-遵循 CLAUDE.md 中定义的检查工作流程：
+**技能目录定位**：
+- 首先检查 `~/.agents/skills/knowledge-pipline/`
+- 然后检查 `~/.claude/skills/knowledge-pipline/`
+- 最后检查当前项目目录
+
+**执行方式**：
+```bash
+python <skill-dir>/tools/pipeline_lint.py
+```
+
+遵循检查工作流程：
 
 结构检查（使用 Grep 和 Glob 工具）：
 1. 孤立页面 — 没有其他页面的入链 [[wikilinks]] 的维基页面

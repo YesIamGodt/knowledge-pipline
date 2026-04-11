@@ -4,7 +4,17 @@
 
 $ARGUMENTS 是要回答的问题，例如：`所有来源中的主要主题是什么？`
 
-遵循 CLAUDE.md 中定义的查询工作流程：
+**技能目录定位**：
+- 首先检查 `~/.agents/skills/knowledge-pipline/`
+- 然后检查 `~/.claude/skills/knowledge-pipline/`
+- 最后检查当前项目目录
+
+**执行方式**：
+```bash
+python <skill-dir>/tools/pipeline_query.py $ARGUMENTS
+```
+
+遵循查询工作流程：
 1. 阅读 wiki/index.md 以识别最相关的页面
 2. 阅读这些页面（最多约 10 个最相关的）
 3. 综合一个详尽的 markdown 答案，使用 [[页面名称]] 维基链接引用

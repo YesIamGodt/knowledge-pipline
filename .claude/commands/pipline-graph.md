@@ -2,6 +2,11 @@
 
 使用方法：/pipline-graph
 
+**技能目录定位**：
+- 首先检查 `~/.agents/skills/knowledge-pipline/`
+- 然后检查 `~/.claude/skills/knowledge-pipline/`
+- 最后检查当前项目目录
+
 首先尝试从配置中读取 Python 路径：
 
 **第一步：检查 Python 路径配置**
@@ -15,7 +20,7 @@
 如果找到了可用的 Python：
 ```bash
 # 假设已从配置中获取到 PYTHON_CMD
-$PYTHON_CMD tools/build_graph.py --open
+$PYTHON_CMD <skill-dir>/tools/build_graph.py --open
 ```
 
 **第三步：备选方案**

@@ -123,7 +123,7 @@ def require_llm_config() -> LLMConfig:
     print()
     print("  方式 1：运行配置命令")
     print("    python tools/pipeline_config.py")
-    print("    或在 Claude Code 中运行 /pipline-config")
+    print("    或在 Claude Code 中运行 /pipeline-config")
     print()
     print("  方式 2：手动创建配置文件")
     print(f"    配置文件路径: {CONFIG_FILE}")

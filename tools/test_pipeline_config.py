@@ -82,10 +82,10 @@ def test_config_reload():
 
     if config1.is_configured():
         print("🎉 配置系统工作正常！")
-        print("💡 您可以使用 /pipline-config 命令重新配置 LLM API。")
+        print("💡 您可以使用 /pipeline-config 命令重新配置 LLM API。")
         print("💡 配置完成后，所有 wiki 命令会立即使用新配置。")
     else:
-        print("⚠️  LLM 未配置，请运行 /pipline-config 进行配置。")
+        print("⚠️  LLM 未配置，请运行 /pipeline-config 进行配置。")
 
     return config1.is_configured()
 

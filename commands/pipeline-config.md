@@ -1,6 +1,6 @@
-配置 Knowledge Pipline 的 LLM API 信息。
+配置 Knowledge Pipeline 的 LLM API 信息。
 
-使用方法：/pipline-config
+使用方法：/pipeline-config
 
 ---
 

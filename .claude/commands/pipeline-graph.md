@@ -1,6 +1,6 @@
 构建知识维基图谱。
 
-使用方法：/pipline-graph
+使用方法：/pipeline-graph
 
 ---
 
@@ -20,7 +20,7 @@
 ### 第二步：检查 LLM 配置
 
 读取 `SKILL_DIR/.llm_config.json`。
-- 如果不存在 → 提示用户先运行 `/pipline-config`，然后停止。
+- 如果不存在 → 提示用户先运行 `/pipeline-config`，然后停止。
 - 如果存在 → 继续。
 
 ### 第三步：执行图谱构建

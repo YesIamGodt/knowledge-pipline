@@ -3,7 +3,7 @@ name: knowledge-pipline
 description: "多模态知识管道技能 — 摄入文档(PDF/图片/视频/Office)到持久化知识维基，支持知识融合、跨源矛盾检测、多源聚合查询、知识图谱构建。当用户提到摄入文档、构建知识库、查询维基、检查一致性、构建知识图谱、文档分析、多模态理解、数据管道等需求时触发此技能。即使用户没有明确说 pipeline 或 knowledge-pipline，只要涉及将文档转化为结构化知识、跨文档分析对比、或知识图谱可视化，都应触发此技能。"
 ---
 
-# Knowledge Pipline — 多模态知识管道
+# Knowledge Pipeline — 多模态知识管道
 
 将任意格式文档摄入为持久化结构化知识维基，支持知识融合、跨源矛盾检测、多源聚合查询。
 
@@ -23,11 +23,11 @@ description: "多模态知识管道技能 — 摄入文档(PDF/图片/视频/Off
 
 | 命令 | 说明 |
 |------|------|
-| `/pipline-ingest <文件路径>` | 摄入文档到知识维基 |
-| `/pipline-query <问题>` | 多源聚合查询 |
-| `/pipline-lint` | 检查孤立页面、断链、矛盾 |
-| `/pipline-graph` | 构建交互式知识图谱 |
-| `/pipline-config` | 配置 LLM API |
+| `/pipeline-ingest <文件路径>` | 摄入文档到知识维基 |
+| `/pipeline-query <问题>` | 多源聚合查询 |
+| `/pipeline-lint` | 检查孤立页面、断链、矛盾 |
+| `/pipeline-graph` | 构建交互式知识图谱 |
+| `/pipeline-config` | 配置 LLM API |
 
 ---
 
@@ -54,11 +54,11 @@ description: "多模态知识管道技能 — 摄入文档(PDF/图片/视频/Off
 │   └── processors/       # PDF/图片/视频/Office 处理器
 ├── .claude/
 │   └── commands/         # 斜杠命令定义
-│       ├── pipline-ingest.md
-│       ├── pipline-query.md
-│       ├── pipline-lint.md
-│       ├── pipline-graph.md
-│       └── pipline-config.md
+│       ├── pipeline-ingest.md
+│       ├── pipeline-query.md
+│       ├── pipeline-lint.md
+│       ├── pipeline-graph.md
+│       └── pipeline-config.md
 ├── wiki/                 # 知识维基（自动创建）
 │   ├── index.md
 │   ├── log.md
@@ -125,12 +125,12 @@ python tools/pipeline_config.py
 
 ## 命令：摄入文档
 
-**触发**：用户说"摄入"、"ingest"、"导入文档"、"分析这个文件"等，或使用 `/pipline-ingest`
+**触发**：用户说“摄入”、“ingest”、“导入文档”、“分析这个文件”等，或使用 `/pipeline-ingest`
 
 ### 用法
 ```
-/pipline-ingest raw/report.pdf
-/pipline-ingest D:\docs\meeting-notes.docx
+/pipeline-ingest raw/report.pdf
+/pipeline-ingest D:\docs\meeting-notes.docx
 摄入 ./my-image.jpg
 ```
 
@@ -181,12 +181,12 @@ python <skill-dir>/tools/pipeline_ingest.py <文件路径>
 
 ## 命令：查询维基
 
-**触发**：用户提问关于已摄入内容的问题、"query"、"查询"等，或使用 `/pipline-query`
+**触发**：用户提问关于已摄入内容的问题、“query”、“查询”等，或使用 `/pipeline-query`
 
 ### 用法
 ```
-/pipline-query transformer 模型的主要创新是什么？
-/pipline-query 所有来源中提到的安全风险
+/pipeline-query transformer 模型的主要创新是什么？
+/pipeline-query 所有来源中提到的安全风险
 查询 "AI 对就业的影响"
 ```
 
@@ -216,11 +216,11 @@ python <skill-dir>/tools/pipeline_query.py "问题" --auto-save
 
 ## 命令：检查维基
 
-**触发**：用户说"lint"、"检查"、"审计维基"等，或使用 `/pipline-lint`
+**触发**：用户说“lint”、“检查”、“审计维基”等，或使用 `/pipeline-lint`
 
 ### 用法
 ```
-/pipline-lint
+/pipeline-lint
 检查维基
 lint
 ```
@@ -244,11 +244,11 @@ python <skill-dir>/tools/pipeline_lint.py
 
 ## 命令：构建知识图谱
 
-**触发**：用户说"build graph"、"构建图谱"、"知识图谱"等，或使用 `/pipline-graph`
+**触发**：用户说“build graph”、“构建图谱”、“知识图谱”等，或使用 `/pipeline-graph`
 
 ### 用法
 ```
-/pipline-graph
+/pipeline-graph
 构建知识图谱
 build graph
 ```
@@ -272,7 +272,7 @@ python <skill-dir>/tools/build_graph.py --open
 
 ## 命令：配置 LLM
 
-**触发**：用户说"配置"、"config"、"设置 API"等，或使用 `/pipline-config`
+**触发**：用户说"配置"、"config"、"设置 API"等，或使用 `/pipeline-config`
 
 ### 执行方式
 ```bash
@@ -310,7 +310,7 @@ last_updated: YYYY-MM-DD
 
 **持久化知识积累** vs RAG 查询时推导：
 
-| 特性 | 传统 RAG | Knowledge Pipline |
+| 特性 | 传统 RAG | Knowledge Pipeline |
 |------|----------|-------------------|
 | 知识存储 | 向量数据库（无结构） | 结构化维基页面 |
 | 新文档摄入 | 追加嵌入 | **知识融合**（合并已有页面） |

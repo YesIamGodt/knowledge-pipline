@@ -1,6 +1,6 @@
 将源文档摄入到知识维基中。
 
-使用方法：/pipline-ingest $ARGUMENTS
+使用方法：/pipeline-ingest $ARGUMENTS
 
 $ARGUMENTS 是文件的**绝对路径**，例如：`D:\docs\my-paper.pdf`
 
@@ -22,7 +22,7 @@ $ARGUMENTS 是文件的**绝对路径**，例如：`D:\docs\my-paper.pdf`
 ### 第二步：检查 LLM 配置
 
 读取 `SKILL_DIR/.llm_config.json`。
-- 如果不存在 → 提示用户先运行 `/pipline-config`，然后停止。
+- 如果不存在 → 提示用户先运行 `/pipeline-config`，然后停止。
 - 如果存在 → 继续。
 
 ### 第三步：执行摄入

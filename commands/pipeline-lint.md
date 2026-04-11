@@ -1,6 +1,6 @@
 检查知识维基的健康状况。
 
-使用方法：/pipline-lint
+使用方法：/pipeline-lint
 
 ---
 

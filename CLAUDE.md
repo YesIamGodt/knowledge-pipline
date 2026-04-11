@@ -17,7 +17,7 @@
 
 ### 配置提示
 
-当用户在没有配置的情况下运行 `/pipline-ingest`、`/pipline-query`、`/pipline-graph`（任何依赖 LLM 的命令）时：
+当用户在没有配置的情况下运行 `/pipeline-ingest`、`/pipeline-query`、`/pipeline-graph`（任何依赖 LLM 的命令）时：
 
 1. **显示清晰的消息：**
    ```
@@ -25,15 +25,15 @@
    ```
 
 2. **询问用户是否需要运行配置：**
-   - **问题**："是否需要运行 `/pipline-config` 进行配置？"
+   - **问题**：“是否需要运行 `/pipeline-config` 进行配置？”
    - **选项**：「是，运行配置」、「否，稍后再说」
 
 3. **如果用户选择「是」：**
-   - 立即执行 `/pipline-config` 命令
+   - 立即执行 `/pipeline-config` 命令
    - 配置完成后，询问用户是否继续执行原始命令
 
 4. **如果用户选择「否」：**
-   - 提示用户稍后可以随时运行 `/pipline-config` 进行配置
+   - 提示用户稍后可以随时运行 `/pipeline-config` 进行配置
    - 停止执行当前命令
 
 ### 配置文件格式
@@ -60,7 +60,7 @@
 
 ## 管道配置
 
-触发方式：*"重新配置 LLM"* 或 `/pipline-config`
+触发方式：*"重新配置 LLM"* 或 `/pipeline-config`
 
 **功能**: 重新配置 LLM API 信息，支持以下提供商：
 
@@ -82,11 +82,11 @@
 
 | 命令 | 用法 |
 |---|---|
-| `/pipline-config` | `重新配置 LLM API` |
-| `/pipline-ingest` | `摄入 raw/my-article.md` |
-| `/pipline-query` | `query: 主要主题是什么？` |
-| `/pipline-lint` | `检查维基` |
-| `/pipline-graph` | `构建知识图谱` |
+| `/pipeline-config` | `重新配置 LLM API` |
+| `/pipeline-ingest` | `摄入 raw/my-article.md` |
+| `/pipeline-query` | `query: 主要主题是什么？` |
+| `/pipeline-lint` | `检查维基` |
+| `/pipeline-graph` | `构建知识图谱` |
 
 或者直接用自然语言描述你的需求：
 - *"摄入这个文件：raw/papers/attention-is-all-you-need.md"*
@@ -136,7 +136,7 @@ Use `[[PageName]]` wikilinks to link to other wiki pages.
 
 ## 摄入工作流
 
-触发方式：*"摄入 <文件>"* 或 `/pipline-ingest`
+触发方式：*"摄入 <文件>"* 或 `/pipeline-ingest`
 
 **前置条件**：运行 LLM 配置检查（见上文）。如果未配置，请先完成配置。
 
@@ -209,7 +209,7 @@ source_file: raw/...
 
 ## 查询工作流
 
-触发方式：*"query: <问题>"* 或 `/pipline-query`
+触发方式：*"query: <问题>"* 或 `/pipeline-query`
 
 **前置条件**：运行 LLM 配置检查（见上文）。如果未配置，请先完成配置。
 
@@ -223,7 +223,7 @@ source_file: raw/...
 
 ## 检查工作流
 
-触发方式：*"检查维基"* 或 `/pipline-lint`
+触发方式：*"检查维基"* 或 `/pipeline-lint`
 
 使用 Grep 和 Read 工具检查：
 - **孤立页面** — 没有其他页面的入站 `[[链接]]` 的维基页面
@@ -239,7 +239,7 @@ source_file: raw/...
 
 ## 图谱工作流
 
-触发方式：*"构建知识图谱"* 或 `/pipline-graph`
+触发方式：*"构建知识图谱"* 或 `/pipeline-graph`
 
 **前置条件**：运行 LLM 配置检查（见上文）。如果未配置，请先完成配置。
 
@@ -251,7 +251,7 @@ source_file: raw/...
 
 **IMPORTANT**: 使用配置的 Python 路径来运行：
 1. 首先检查 `.claude_settings.json` 中的 `python_path` 配置
-2. 如果没有配置，提示用户运行 `/pipline-config` 配置 Python 路径
+2. 如果没有配置，提示用户运行 `/pipeline-config` 配置 Python 路径
 3. 如果配置了但无法运行，使用 Claude Code 手动构建图谱：
    - 读取所有维基页面
    - 识别所有 `[[wikilinks]]`

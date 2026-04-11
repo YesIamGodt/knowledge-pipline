@@ -4,7 +4,7 @@
  * install-commands.mjs
  *
  * 安装 knowledge-pipline 的斜杠命令到 ~/.claude/commands/
- * 使 /pipline-ingest, /pipline-query, /pipline-graph, /pipline-lint 全局可用
+ * 使 /pipeline-ingest, /pipeline-query, /pipeline-graph, /pipeline-lint 全局可用
  *
  * 用法：
  *   node scripts/install-commands.mjs
@@ -32,11 +32,11 @@ if (!existsSync(commandsSource)) {
 const targetDir = join(homedir(), '.claude', 'commands');
 
 const commandFiles = [
-  'pipline-ingest.md',
-  'pipline-query.md',
-  'pipline-graph.md',
-  'pipline-lint.md',
-  'pipline-config.md',
+  'pipeline-ingest.md',
+  'pipeline-query.md',
+  'pipeline-graph.md',
+  'pipeline-lint.md',
+  'pipeline-config.md',
 ];
 
 console.log('');
@@ -70,9 +70,9 @@ console.log('');
 console.log(`  安装完成！${installed} 个斜杠命令已添加到 ${targetDir}`);
 console.log('');
 console.log('  现在可以在 Claude Code 中使用：');
-console.log('    /pipline-config                          # 配置 LLM API');
-console.log('    /pipline-ingest "D:\\path\\to\\document.pdf"  # 摄入文档');
-console.log('    /pipline-query "你的问题"                   # 查询');
-console.log('    /pipline-graph                            # 构建知识图谱');
-console.log('    /pipline-lint                             # 检查维基');
+console.log('    /pipeline-config                          # 配置 LLM API');
+console.log('    /pipeline-ingest "D:\\path\\to\\document.pdf"  # 摄入文档');
+console.log('    /pipeline-query "你的问题"                   # 查询');
+console.log('    /pipeline-graph                            # 构建知识图谱');
+console.log('    /pipeline-lint                             # 检查维基');
 console.log('');

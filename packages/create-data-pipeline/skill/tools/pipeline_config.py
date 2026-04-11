@@ -167,7 +167,7 @@ def main():
         if success:
             print("\n🎉 配置完成！")
             print("💡 所有 wiki 命令现在将使用新配置。")
-            print("💡 您可以运行 /pipline-query 来测试新配置是否工作正常。")
+            print("💡 您可以运行 /pipeline-query 来测试新配置是否工作正常。")
         else:
             print("\nℹ️  配置过程已结束")
             return 1

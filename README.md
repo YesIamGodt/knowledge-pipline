@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧠 Knowledge Pipline
+# 🧠 Knowledge Pipeline
 
 **别再让 AI 帮你搜索了。让它帮你理解。**
 
@@ -24,9 +24,9 @@
 
 行。如果你只有一份文档，只问一次。
 
-但当你有 **50 份文档**，跨越 **3 个月**，涉及 **12 个人物** 和 **8 个核心概念** — ChatGPT 给你的是一个聊天记录，Knowledge Pipline 给你的是一座**活的知识库**：
+但当你有 **50 份文档**，跨越 **3 个月**，涉及 **12 个人物** 和 **8 个核心概念** — ChatGPT 给你的是一个聊天记录，Knowledge Pipeline 给你的是一座**活的知识库**：
 
-| | ChatGPT / Claude 文件上传（RAG） | Knowledge Pipline |
+| | ChatGPT / Claude 文件上传（RAG） | Knowledge Pipeline |
 |---|---|---|
 | 📄 读文档 | 每次会话重新上传，不积累 | **一次摄入，永久积累** |
 | 🔗 跨文档关联 | 只检索相关片段拼接 | **自动构建实体和概念网络** |
@@ -36,7 +36,7 @@
 | 📊 可视化 | 无 | **交互式知识图谱（vis.js）** |
 | 💾 中间表示 | 黑盒向量，不可浏览 | **结构化 Markdown 维基（Obsidian 兼容）** |
 
-**一句话：ChatGPT 是你的对话工具。Knowledge Pipline 是你的第二大脑。**
+**一句话：ChatGPT 是你的对话工具。Knowledge Pipeline 是你的第二大脑。**
 
 ### 🎯 真实案例：深层模式挖掘
 
@@ -49,15 +49,15 @@
 **RAG（ChatGPT/Claude 文件上传）的做法：**
 检索和"程序员失业"最相关的文本片段 — 但 18 份文档里没有一份在讨论这个话题。RAG 检索不到相关段落，只能用模型自身知识泛泛而谈。
 
-**Knowledge Pipline 的做法：**
+**Knowledge Pipeline 的做法：**
 
 ```
-你：/pipline-ingest D:\docs\raw
+你：/pipeline-ingest D:\docs\raw
 AI：✅ 批量摄入完成
     📝 18 个源文档 → 23 个实体页面 + 36 个概念页面
     ⚠️ 发现 3 处跨源矛盾
 
-你：/pipline-query AI在2026年真的会引起程序员失业吗？详细回答
+你：/pipeline-query AI在2026年真的会引起程序员失业吗？详细回答
 ```
 
 它不检索文本碎片 — 它在已经编译好的**概念网络和实体关系**中发现深层模式：
@@ -103,7 +103,7 @@ AI：✅ 批量摄入完成
 
 因为 RAG 的工作方式是"检索文本片段" — 它去向量库里找和"程序员失业"最相似的段落。但这 18 份文档里没有任何段落在讨论程序员失业，RAG 检索不到有用的内容。
 
-Knowledge Pipline 能回答，是因为摄入时已经把文档编译成了**结构化的概念网络**：
+Knowledge Pipeline 能回答，是因为摄入时已经把文档编译成了**结构化的概念网络**：
 
 - 论文里的 MBWGCN 代码实现 → 概念页面 [[图神经网络]]、[[服务计算]] 
 - Claude Code 的 ARR 数据 → 实体页面 [[Claude Code]]、概念页面 [[SupplyChainSecurity]]
@@ -111,7 +111,7 @@ Knowledge Pipline 能回答，是因为摄入时已经把文档编译成了**结
 
 查询时，系统不是在文本碎片中搜索 — 它在概念和实体页面之间**推理**：论文的"编码工作"和 Claude Code 的"AI 编程能力"通过概念网络连接在一起，医学的"临床判断"和工程的"架构决策"通过"上下文推理"这个共同特征关联。
 
-**这就是本质区别：RAG 在文档碎片中搜索答案，Knowledge Pipline 在知识体系中推理答案。**
+**这就是本质区别：RAG 在文档碎片中搜索答案，Knowledge Pipeline 在知识体系中推理答案。**
 
 ---
 
@@ -144,7 +144,7 @@ node "$HOME\.agents\skills\knowledge-pipline\scripts\install-commands.mjs"
 node ~/.agents/skills/knowledge-pipline/scripts/install-commands.mjs
 ```
 
-这会将五个斜杠命令注册到 `~/.claude/commands/`，让你可以在任何项目中使用 `/pipline-config`、`/pipline-ingest`、`/pipline-query`、`/pipline-graph`、`/pipline-lint`。
+这会将五个斜杠命令注册到 `~/.claude/commands/`，让你可以在任何项目中使用 `/pipeline-config`、`/pipeline-ingest`、`/pipeline-query`、`/pipeline-graph`、`/pipeline-lint`。
 
 ### 方式二：手动安装
 
@@ -174,7 +174,7 @@ pip install opencv-python
 
 ### 配置 LLM API
 
-首次使用时，在 Claude Code 中运行 **`/pipline-config`**，按交互向导配置 LLM API。
+首次使用时，在 Claude Code 中运行 **`/pipeline-config`**，按交互向导配置 LLM API。
 
 或手动创建配置文件：
 
@@ -207,9 +207,9 @@ pip install opencv-python
 ### 📥 多模态摄入
 
 ```
-/pipline-ingest /path/to/research-paper.pdf
-/pipline-ingest ./meeting-notes.docx
-/pipline-ingest ./product-screenshot.png
+/pipeline-ingest /path/to/research-paper.pdf
+/pipeline-ingest ./meeting-notes.docx
+/pipeline-ingest ./product-screenshot.png
 ```
 
 | 格式 | 支持 | 处理方式 |
@@ -227,7 +227,7 @@ pip install opencv-python
 
 **普通工具**：每次摄入覆盖旧内容。
 
-**Knowledge Pipline**：如果"OpenAI"的实体页面已存在，新文档的信息会被**智能合并**进去 — 保留旧信息、追加新发现、标注矛盾。你的知识只增不减。
+**Knowledge Pipeline**：如果"OpenAI"的实体页面已存在，新文档的信息会被**智能合并**进去 — 保留旧信息、追加新发现、标注矛盾。你的知识只增不减。
 
 ### ⚡ 主动矛盾检测
 
@@ -251,7 +251,7 @@ pip install opencv-python
 ### 🧭 跨源聚合查询
 
 ```
-/pipline-query "transformer 模型的主要创新是什么？"
+/pipeline-query "transformer 模型的主要创新是什么？"
 ```
 
 回答不止给你结论，还展示**多源视角**：
@@ -271,7 +271,7 @@ pip install opencv-python
 ### 📊 知识图谱
 
 ```
-/pipline-graph
+/pipeline-graph
 ```
 
 生成自包含的 `graph.html` — 打开浏览器即可交互探索：
@@ -311,11 +311,11 @@ wiki/
 ### 🔬 学术研究
 
 ```
-/pipline-ingest paper1.pdf     →  "Transformer 用注意力机制取代 RNN"
-/pipline-ingest paper2.pdf     →  "BERT 的预训练范式更关键" 
-/pipline-ingest paper3.pdf     →  "Scaling Laws 才是根本"
-/pipline-query "核心创新是什么？"  →  三篇论文的观点对比 + 共识与分歧
-/pipline-graph                  →  概念关系可视化
+/pipeline-ingest paper1.pdf     →  "Transformer 用注意力机制取代 RNN"
+/pipeline-ingest paper2.pdf     →  "BERT 的预训练范式更关键" 
+/pipeline-ingest paper3.pdf     →  "Scaling Laws 才是根本"
+/pipeline-query "核心创新是什么？"  →  三篇论文的观点对比 + 共识与分歧
+/pipeline-graph                  →  概念关系可视化
 ```
 
 > 读 50 篇论文后，你拥有的不是 50 个文件，而是一座互相交叉引用的知识体系。
@@ -323,30 +323,30 @@ wiki/
 ### 📊 竞品分析
 
 ```
-/pipline-ingest openai-blog.md
-/pipline-ingest anthropic-report.pdf
-/pipline-ingest google-deepmind-paper.pdf
-/pipline-query "三家公司在安全方面的策略对比"
+/pipeline-ingest openai-blog.md
+/pipeline-ingest anthropic-report.pdf
+/pipeline-ingest google-deepmind-paper.pdf
+/pipeline-query "三家公司在安全方面的策略对比"
 → 自动展示每家公司的立场、共识点和分歧点
 ```
 
 ### 📚 读书笔记
 
 ```
-/pipline-ingest chapter-01.md   →  主题/人物页面自动创建
-/pipline-ingest chapter-02.md   →  新信息合并到已有页面
-/pipline-ingest chapter-10.md   →  自动发现前后矛盾
-/pipline-query "主角的动机如何演化？"
+/pipeline-ingest chapter-01.md   →  主题/人物页面自动创建
+/pipeline-ingest chapter-02.md   →  新信息合并到已有页面
+/pipeline-ingest chapter-10.md   →  自动发现前后矛盾
+/pipeline-query "主角的动机如何演化？"
 ```
 
 ### 🏢 企业知识库
 
 ```
-/pipline-ingest 会议纪要.docx
-/pipline-ingest 客户访谈.pdf
-/pipline-ingest 产品路线图.xlsx
-/pipline-query "客户最常提到的需求是什么？"
-/pipline-lint  →  "项目 X 被 5 个文档提及但没有专属页面"
+/pipeline-ingest 会议纪要.docx
+/pipeline-ingest 客户访谈.pdf
+/pipeline-ingest 产品路线图.xlsx
+/pipeline-query "客户最常提到的需求是什么？"
+/pipeline-lint  →  "项目 X 被 5 个文档提及但没有专属页面"
 ```
 
 ---
@@ -356,7 +356,7 @@ wiki/
 ### 示例 1：批量摄入 — 一次丢进去，永久积累
 
 ```
-你：/pipline-ingest D:\docs\raw
+你：/pipeline-ingest D:\docs\raw
 AI：✅ 批量摄入完成 (18个文件)
     📄 sources: 硕士论文×4, 安全审计×3, 事件报告×2, RAG技术×1, 照片×3, 视频×1 ...
     🧑 entities: 23 个 (华为云, Anthropic, 林加锋, 汤涛, 南京邮电大学 ...)
@@ -367,7 +367,7 @@ AI：✅ 批量摄入完成 (18个文件)
 ### 示例 2：跨领域查询 — 答案来自你自己的文档
 
 ```
-你：/pipline-query AI在2026年真的会引起程序员失业吗？
+你：/pipeline-query AI在2026年真的会引起程序员失业吗？
 AI：## AI 对程序员就业的影响
 
     ### 来自维基的直接证据
@@ -384,7 +384,7 @@ AI：## AI 对程序员就业的影响
 ### 示例 3：构建知识图谱
 
 ```
-你：/pipline-graph
+你：/pipeline-graph
 AI：📊 图谱统计:
        提取边: 289 条 (来自 [[wikilinks]])
        推断边: 81 条 (LLM 语义推断)
@@ -395,7 +395,7 @@ AI：📊 图谱统计:
 ### 示例 4：维基健康检查
 
 ```
-你：/pipline-lint
+你：/pipeline-lint
 AI：🏥 维基健康报告
     ❌ 断链 2 处: [[不存在的页面]]
     ⚠️ 孤立页面 1 个: concepts/都市景观.md
@@ -408,12 +408,12 @@ AI：🏥 维基健康报告
 
 安装后，你将获得 **五个核心斜杠命令**，在 Claude Code 任意项目中可用：
 
-### ⚙️ `/pipline-config` — 配置 LLM API
+### ⚙️ `/pipeline-config` — 配置 LLM API
 
 配置知识管道使用的 LLM API 信息。**首次使用前必须运行。**
 
 ```bash
-/pipline-config
+/pipeline-config
 ```
 
 交互向导引导你：
@@ -421,14 +421,14 @@ AI：🏥 维基健康报告
 - 输入 base_url、模型名称、API 密钥
 - 配置保存到技能目录下的 `.llm_config.json`
 
-### 📥 `/pipline-ingest` — 摄入文档
+### 📥 `/pipeline-ingest` — 摄入文档
 
 将文档摄入到知识维基。支持 PDF、图片、视频、Word、Excel、PPT、HTML、Markdown 等格式。
 
 ```bash
-/pipline-ingest "D:\docs\research-paper.pdf"
-/pipline-ingest "/home/user/meeting-notes.docx"
-/pipline-ingest "C:\Users\me\Desktop\screenshot.png"
+/pipeline-ingest "D:\docs\research-paper.pdf"
+/pipeline-ingest "/home/user/meeting-notes.docx"
+/pipeline-ingest "C:\Users\me\Desktop\screenshot.png"
 ```
 
 **必须使用绝对路径**。摄入时自动执行：
@@ -437,13 +437,13 @@ AI：🏥 维基健康报告
 - 主动矛盾检测：与已有 claims 对比，报告冲突
 - 更新索引、概览、日志
 
-### 🔍 `/pipline-query` — 查询维基
+### 🔍 `/pipeline-query` — 查询维基
 
 基于已摄入的文档进行多源聚合查询。
 
 ```bash
-/pipline-query "transformer 模型的核心创新是什么？"
-/pipline-query "各来源对 AI 安全的观点有什么分歧？"
+/pipeline-query "transformer 模型的核心创新是什么？"
+/pipeline-query "各来源对 AI 安全的观点有什么分歧？"
 ```
 
 查询结果包含：
@@ -451,24 +451,24 @@ AI：🏥 维基健康报告
 - **共识与分歧**：多源一致 ✅ / 观点分歧 ⚠️ / 单源独有 ❓
 - **[[wikilink]]** 引用到具体页面
 
-### 📊 `/pipline-graph` — 构建知识图谱
+### 📊 `/pipeline-graph` — 构建知识图谱
 
 生成交互式 vis.js 知识图谱可视化。
 
 ```bash
-/pipline-graph
+/pipeline-graph
 ```
 
 输出：
 - `graph/graph.json` — 节点 + 边 + 社区数据
 - `graph/graph.html` — 浏览器打开即可交互探索
 
-### 🏥 `/pipline-lint` — 维基健康检查
+### 🏥 `/pipeline-lint` — 维基健康检查
 
 检查知识维基的完整性和一致性。
 
 ```bash
-/pipline-lint
+/pipeline-lint
 ```
 
 检查项：
@@ -482,11 +482,11 @@ AI：🏥 维基健康报告
 
 | 说什么 | 等同于 |
 |------|------|
-| `配置 LLM API` / `configure` | `/pipline-config` |
-| `摄入 <文件>` / `ingest <file>` | `/pipline-ingest` |
-| `查询 <问题>` / `query: <question>` | `/pipline-query` |
-| `构建图谱` / `build graph` | `/pipline-graph` |
-| `检查` / `lint` | `/pipline-lint` |
+| `配置 LLM API` / `configure` | `/pipeline-config` |
+| `摄入 <文件>` / `ingest <file>` | `/pipeline-ingest` |
+| `查询 <问题>` / `query: <question>` | `/pipeline-query` |
+| `构建图谱` / `build graph` | `/pipeline-graph` |
+| `检查` / `lint` | `/pipeline-lint` |
 
 ### Python CLI
 

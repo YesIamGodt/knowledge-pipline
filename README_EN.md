@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧠 Knowledge Pipline
+# 🧠 Knowledge Pipeline
 
 **Stop asking AI to search for you. Make it understand for you.**
 
@@ -24,9 +24,9 @@ Throw any document at it — PDF, images, video, Word, Excel — it doesn't just
 
 Sure. If you have one document and one question.
 
-But when you have **50 documents** spanning **3 months**, involving **12 people** and **8 core concepts** — ChatGPT gives you a chat log. Knowledge Pipline gives you a **living knowledge base**:
+But when you have **50 documents** spanning **3 months**, involving **12 people** and **8 core concepts** — ChatGPT gives you a chat log. Knowledge Pipeline gives you a **living knowledge base**:
 
-| | ChatGPT / Claude File Upload (RAG) | Knowledge Pipline |
+| | ChatGPT / Claude File Upload (RAG) | Knowledge Pipeline |
 |---|---|---|
 | 📄 Read docs | Re-upload every session, no accumulation | **Ingest once, accumulate forever** |
 | 🔗 Cross-doc links | Only retrieves relevant fragments to stitch | **Auto-builds entity & concept networks** |
@@ -36,7 +36,7 @@ But when you have **50 documents** spanning **3 months**, involving **12 people*
 | 📊 Visualization | None | **Interactive knowledge graph (vis.js)** |
 | 💾 Intermediate repr. | Black-box vectors, not browsable | **Structured Markdown wiki (Obsidian-compatible)** |
 
-**In one sentence: ChatGPT is your chat tool. Knowledge Pipline is your second brain.**
+**In one sentence: ChatGPT is your chat tool. Knowledge Pipeline is your second brain.**
 
 ### 🎯 Real-World Case: Deep Pattern Mining
 
@@ -49,15 +49,15 @@ Then asked a question that **no single document directly discusses**:
 **What RAG (ChatGPT/Claude file upload) does:**
 Retrieves text chunks most similar to "programmer unemployment" — but none of the 18 documents discuss this topic. RAG can't find relevant passages, so it falls back to the model's own knowledge for a generic answer.
 
-**What Knowledge Pipline does:**
+**What Knowledge Pipeline does:**
 
 ```
-You: /pipline-ingest D:\docs\raw
+You: /pipeline-ingest D:\docs\raw
 AI:  ✅ Batch ingest complete
      📝 18 sources → 23 entity pages + 36 concept pages
      ⚠️ Found 3 cross-source contradictions
 
-You: /pipline-query "Will AI really cause programmer unemployment in 2026?"
+You: /pipeline-query "Will AI really cause programmer unemployment in 2026?"
 ```
 
 It doesn't search text fragments — it discovers deep patterns in the **pre-compiled concept network and entity relationships**:
@@ -109,7 +109,7 @@ Not "unemployment" but "layered elimination":
 
 Because RAG works by "retrieving text fragments" — it searches the vector store for passages most similar to "programmer unemployment". But none of the 18 documents discuss programmer unemployment, so RAG can't retrieve useful content.
 
-Knowledge Pipline can answer because ingestion has already compiled documents into a **structured concept network**:
+Knowledge Pipeline can answer because ingestion has already compiled documents into a **structured concept network**:
 
 - Thesis MBWGCN code implementation → concept pages [[GraphNeuralNetwork]], [[ServiceComputing]]
 - Claude Code's ARR data → entity page [[Claude Code]], concept page [[SupplyChainSecurity]]
@@ -117,7 +117,7 @@ Knowledge Pipline can answer because ingestion has already compiled documents in
 
 At query time, the system doesn't search text fragments — it **reasons** between concept and entity pages: the thesis's "coding work" and Claude Code's "AI programming capability" connect through the concept network; medicine's "clinical judgment" and engineering's "architecture decisions" relate through their shared trait of "contextual reasoning".
 
-**This is the fundamental difference: RAG searches for answers in document fragments. Knowledge Pipline reasons for answers within your knowledge system.**
+**This is the fundamental difference: RAG searches for answers in document fragments. Knowledge Pipeline reasons for answers within your knowledge system.**
 
 ---
 
@@ -150,7 +150,7 @@ node "$HOME\.agents\skills\knowledge-pipline\scripts\install-commands.mjs"
 node ~/.agents/skills/knowledge-pipline/scripts/install-commands.mjs
 ```
 
-This registers five slash commands to `~/.claude/commands/`, making `/pipline-config`, `/pipline-ingest`, `/pipline-query`, `/pipline-graph`, `/pipline-lint` available in any project.
+This registers five slash commands to `~/.claude/commands/`, making `/pipeline-config`, `/pipeline-ingest`, `/pipeline-query`, `/pipeline-graph`, `/pipeline-lint` available in any project.
 
 ### Option 2: Manual Install
 
@@ -178,7 +178,7 @@ pip install opencv-python
 
 ### Configure LLM API
 
-On first use, run **`/pipline-config`** in Claude Code and follow the interactive wizard.
+On first use, run **`/pipeline-config`** in Claude Code and follow the interactive wizard.
 
 Or manually create a config file:
 
@@ -211,9 +211,9 @@ Or manually create a config file:
 ### 📥 Multimodal Ingestion
 
 ```
-/pipline-ingest /path/to/research-paper.pdf
-/pipline-ingest ./meeting-notes.docx
-/pipline-ingest ./product-screenshot.png
+/pipeline-ingest /path/to/research-paper.pdf
+/pipeline-ingest ./meeting-notes.docx
+/pipeline-ingest ./product-screenshot.png
 ```
 
 | Format | Support | Processing |
@@ -231,7 +231,7 @@ Or manually create a config file:
 
 **Typical tools**: Each ingest overwrites old content.
 
-**Knowledge Pipline**: If an "OpenAI" entity page already exists, new document info is **intelligently merged** — preserving old information, appending new findings, flagging contradictions. Your knowledge only grows.
+**Knowledge Pipeline**: If an "OpenAI" entity page already exists, new document info is **intelligently merged** — preserving old information, appending new findings, flagging contradictions. Your knowledge only grows.
 
 ### ⚡ Proactive Contradiction Detection
 
@@ -255,7 +255,7 @@ Doesn't wait for you to ask. Automatically scans after every ingest:
 ### 🧭 Cross-Source Aggregated Query
 
 ```
-/pipline-query "What are the main innovations in transformer models?"
+/pipeline-query "What are the main innovations in transformer models?"
 ```
 
 Answers include not just conclusions but **multi-source perspectives**:
@@ -275,7 +275,7 @@ Answers include not just conclusions but **multi-source perspectives**:
 ### 📊 Knowledge Graph
 
 ```
-/pipline-graph
+/pipeline-graph
 ```
 
 Generates a self-contained `graph.html` — open in browser to interactively explore:
@@ -315,11 +315,11 @@ Open `wiki/` in [Obsidian](https://obsidian.md) — native `[[wikilink]]` suppor
 ### 🔬 Academic Research
 
 ```
-/pipline-ingest paper1.pdf     →  "Transformer replaces RNN with attention"
-/pipline-ingest paper2.pdf     →  "BERT's pre-training paradigm is more important"
-/pipline-ingest paper3.pdf     →  "Scaling Laws are fundamental"
-/pipline-query "What are the core innovations?"  →  Multi-paper comparison + consensus
-/pipline-graph                  →  Concept relationship visualization
+/pipeline-ingest paper1.pdf     →  "Transformer replaces RNN with attention"
+/pipeline-ingest paper2.pdf     →  "BERT's pre-training paradigm is more important"
+/pipeline-ingest paper3.pdf     →  "Scaling Laws are fundamental"
+/pipeline-query "What are the core innovations?"  →  Multi-paper comparison + consensus
+/pipeline-graph                  →  Concept relationship visualization
 ```
 
 > After reading 50 papers, you don't have 50 files — you have a cross-referenced knowledge system.
@@ -327,30 +327,30 @@ Open `wiki/` in [Obsidian](https://obsidian.md) — native `[[wikilink]]` suppor
 ### 📊 Competitive Analysis
 
 ```
-/pipline-ingest openai-blog.md
-/pipline-ingest anthropic-report.pdf
-/pipline-ingest google-deepmind-paper.pdf
-/pipline-query "Compare the three companies' safety strategies"
+/pipeline-ingest openai-blog.md
+/pipeline-ingest anthropic-report.pdf
+/pipeline-ingest google-deepmind-paper.pdf
+/pipeline-query "Compare the three companies' safety strategies"
 → Auto-displays each company's position, consensus, and divergence
 ```
 
 ### 📚 Reading Notes
 
 ```
-/pipline-ingest chapter-01.md   →  Theme/character pages auto-created
-/pipline-ingest chapter-02.md   →  New info merged into existing pages
-/pipline-ingest chapter-10.md   →  Auto-discovers contradictions
-/pipline-query "How does the protagonist's motivation evolve?"
+/pipeline-ingest chapter-01.md   →  Theme/character pages auto-created
+/pipeline-ingest chapter-02.md   →  New info merged into existing pages
+/pipeline-ingest chapter-10.md   →  Auto-discovers contradictions
+/pipeline-query "How does the protagonist's motivation evolve?"
 ```
 
 ### 🏢 Enterprise Knowledge Base
 
 ```
-/pipline-ingest meeting-minutes.docx
-/pipline-ingest customer-interviews.pdf
-/pipline-ingest product-roadmap.xlsx
-/pipline-query "What needs do customers mention most?"
-/pipline-lint  →  "Project X mentioned in 5 docs but has no dedicated page"
+/pipeline-ingest meeting-minutes.docx
+/pipeline-ingest customer-interviews.pdf
+/pipeline-ingest product-roadmap.xlsx
+/pipeline-query "What needs do customers mention most?"
+/pipeline-lint  →  "Project X mentioned in 5 docs but has no dedicated page"
 ```
 
 ---
@@ -360,7 +360,7 @@ Open `wiki/` in [Obsidian](https://obsidian.md) — native `[[wikilink]]` suppor
 ### Example 1: Batch Ingest — Throw It In, Keep It Forever
 
 ```
-You: /pipline-ingest D:\docs\raw
+You: /pipeline-ingest D:\docs\raw
 AI:  ✅ Batch ingest complete (18 files)
      📄 sources: theses×4, security audits×3, incident reports×2, RAG tech×1, photos×3, video×1 ...
      🧑 entities: 23 (Huawei Cloud, Anthropic, researchers, universities ...)
@@ -371,7 +371,7 @@ AI:  ✅ Batch ingest complete (18 files)
 ### Example 2: Cross-Domain Query — Answers From Your Own Documents
 
 ```
-You: /pipline-query "Will AI cause programmer unemployment in 2026?"
+You: /pipeline-query "Will AI cause programmer unemployment in 2026?"
 AI:  ## AI's Impact on Programmer Employment
 
      ### Direct Evidence from Wiki
@@ -388,7 +388,7 @@ AI:  ## AI's Impact on Programmer Employment
 ### Example 3: Build Knowledge Graph
 
 ```
-You: /pipline-graph
+You: /pipeline-graph
 AI:  📊 Graph statistics:
         Extracted edges: 289 (from [[wikilinks]])
         Inferred edges: 81 (LLM semantic inference)
@@ -399,7 +399,7 @@ AI:  📊 Graph statistics:
 ### Example 4: Wiki Health Check
 
 ```
-You: /pipline-lint
+You: /pipeline-lint
 AI:  🏥 Wiki Health Report
      ❌ Broken links: 2
      ⚠️ Orphan pages: 1
@@ -412,12 +412,12 @@ AI:  🏥 Wiki Health Report
 
 After installation, you get **five core slash commands**, available in any Claude Code project:
 
-### ⚙️ `/pipline-config` — Configure LLM API
+### ⚙️ `/pipeline-config` — Configure LLM API
 
 Configure the LLM API used by the knowledge pipeline. **Must run before first use.**
 
 ```
-/pipline-config
+/pipeline-config
 ```
 
 Interactive wizard guides you through:
@@ -425,14 +425,14 @@ Interactive wizard guides you through:
 - base_url, model name, API key input
 - Config saved to `.llm_config.json` in the skill directory
 
-### 📥 `/pipline-ingest` — Ingest Documents
+### 📥 `/pipeline-ingest` — Ingest Documents
 
 Ingest documents into the knowledge wiki. Supports PDF, images, video, Word, Excel, PPT, HTML, Markdown.
 
 ```
-/pipline-ingest "D:\docs\research-paper.pdf"
-/pipline-ingest "/home/user/meeting-notes.docx"
-/pipline-ingest "C:\Users\me\Desktop\screenshot.png"
+/pipeline-ingest "D:\docs\research-paper.pdf"
+/pipeline-ingest "/home/user/meeting-notes.docx"
+/pipeline-ingest "C:\Users\me\Desktop\screenshot.png"
 ```
 
 **Absolute paths required.** Each ingest automatically:
@@ -441,13 +441,13 @@ Ingest documents into the knowledge wiki. Supports PDF, images, video, Word, Exc
 - Proactive contradiction detection: compares against existing claims
 - Updates index, overview, and log
 
-### 🔍 `/pipline-query` — Query Wiki
+### 🔍 `/pipeline-query` — Query Wiki
 
 Multi-source aggregated query based on ingested documents.
 
 ```
-/pipline-query "What are the core innovations in transformer models?"
-/pipline-query "What divergences exist across sources on AI safety?"
+/pipeline-query "What are the core innovations in transformer models?"
+/pipeline-query "What divergences exist across sources on AI safety?"
 ```
 
 Results include:
@@ -455,24 +455,24 @@ Results include:
 - **Consensus & divergence**: Multi-source agreement ✅ / Divergence ⚠️ / Single-source unique ❓
 - **[[wikilink]]** references to specific pages
 
-### 📊 `/pipline-graph` — Build Knowledge Graph
+### 📊 `/pipeline-graph` — Build Knowledge Graph
 
 Generate interactive vis.js knowledge graph visualization.
 
 ```
-/pipline-graph
+/pipeline-graph
 ```
 
 Output:
 - `graph/graph.json` — Nodes + edges + community data
 - `graph/graph.html` — Open in browser to explore interactively
 
-### 🏥 `/pipline-lint` — Wiki Health Check
+### 🏥 `/pipeline-lint` — Wiki Health Check
 
 Check knowledge wiki completeness and consistency.
 
 ```
-/pipline-lint
+/pipeline-lint
 ```
 
 Checks for:
@@ -486,11 +486,11 @@ Checks for:
 
 | Say | Equivalent to |
 |-----|---------------|
-| `configure` / `config LLM` | `/pipline-config` |
-| `ingest <file>` | `/pipline-ingest` |
-| `query: <question>` | `/pipline-query` |
-| `build graph` | `/pipline-graph` |
-| `lint` / `check wiki` | `/pipline-lint` |
+| `configure` / `config LLM` | `/pipeline-config` |
+| `ingest <file>` | `/pipeline-ingest` |
+| `query: <question>` | `/pipeline-query` |
+| `build graph` | `/pipeline-graph` |
+| `lint` / `check wiki` | `/pipeline-lint` |
 
 ### Python CLI
 

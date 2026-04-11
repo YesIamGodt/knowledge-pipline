@@ -21,8 +21,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Find commands source directory
+// npx skills add strips .claude/ dir, so we look in commands/ first
 const repoRoot = join(__dirname, '..');
-const commandsSource = join(repoRoot, '.claude', 'commands');
+let commandsSource = join(repoRoot, 'commands');
+if (!existsSync(commandsSource)) {
+  commandsSource = join(repoRoot, '.claude', 'commands');
+}
 
 // Target: ~/.claude/commands/
 const targetDir = join(homedir(), '.claude', 'commands');

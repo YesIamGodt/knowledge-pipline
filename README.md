@@ -52,11 +52,22 @@ npx skills add YesIamGodt/knowledge-pipline
 
 `npx skills add` 会安装技能文件，但**不会自动注册斜杠命令**。安装后运行：
 
+**Windows（CMD）：**
+```cmd
+node "%USERPROFILE%\.agents\skills\knowledge-pipline\scripts\install-commands.mjs"
+```
+
+**Windows（PowerShell）：**
+```powershell
+node "$HOME\.agents\skills\knowledge-pipline\scripts\install-commands.mjs"
+```
+
+**macOS / Linux：**
 ```bash
 node ~/.agents/skills/knowledge-pipline/scripts/install-commands.mjs
 ```
 
-这会将四个斜杠命令注册到 `~/.claude/commands/`，让你可以在任何项目中使用 `/pipline-ingest`、`/pipline-query`、`/pipline-graph`、`/pipline-lint`。
+这会将五个斜杠命令注册到 `~/.claude/commands/`，让你可以在任何项目中使用 `/pipline-config`、`/pipline-ingest`、`/pipline-query`、`/pipline-graph`、`/pipline-lint`。
 
 ### 方式二：手动安装
 
@@ -86,7 +97,9 @@ pip install opencv-python
 
 ### 配置 LLM API
 
-首次使用时，在 Claude Code 中说 **"配置 LLM API"**，或手动创建配置文件：
+首次使用时，在 Claude Code 中运行 **`/pipline-config`**，按交互向导配置 LLM API。
+
+或手动创建配置文件：
 
 ```json
 // ~/.claude/skills/knowledge-pipline/.llm_config.json
@@ -295,6 +308,10 @@ python tools/pipeline_query.py "AI 对就业市场的影响是什么？" --auto-
 ### 示例 4：在 Claude Code 中用斜杠命令
 
 ```
+你：/pipline-config
+AI：选择您使用的 LLM 提供商：「OpenAI」「自定义兼容端点」「Ollama」
+    ... 交互配置完成 ✅
+
 你：/pipline-ingest raw/examples/transformer-overview.md
 AI：✅ 完成。摄入: Transformer Architecture Overview  (总耗时 12.3s)
     📝 新建 3 个实体/概念页面
@@ -314,7 +331,20 @@ AI：✅ 图谱已构建。12 节点，18 边，3 个社区
 
 ## ⚙️ 命令参考
 
-安装后，你将获得 **四个核心斜杠命令**，在 Claude Code 任意项目中可用：
+安装后，你将获得 **五个核心斜杠命令**，在 Claude Code 任意项目中可用：
+
+### ⚙️ `/pipline-config` — 配置 LLM API
+
+配置知识管道使用的 LLM API 信息。**首次使用前必须运行。**
+
+```bash
+/pipline-config
+```
+
+交互向导引导你：
+- 选择提供商（OpenAI / 自定义兼容端点 / Ollama）
+- 输入 base_url、模型名称、API 密钥
+- 配置保存到技能目录下的 `.llm_config.json`
 
 ### 📥 `/pipline-ingest` — 摄入文档
 
@@ -364,7 +394,7 @@ AI：✅ 图谱已构建。12 节点，18 边，3 个社区
 
 ```bash
 /pipline-lint
-```
+    /pipline-config
 
 检查项：
 - **孤立页面** — 无入链的页面
@@ -377,6 +407,7 @@ AI：✅ 图谱已构建。12 节点，18 边，3 个社区
 
 | 说什么 | 等同于 |
 |------|------|
+| `配置 LLM API` / `configure` | `/pipline-config` |
 | `摄入 <文件>` / `ingest <file>` | `/pipline-ingest` |
 | `查询 <问题>` / `query: <question>` | `/pipline-query` |
 | `构建图谱` / `build graph` | `/pipline-graph` |

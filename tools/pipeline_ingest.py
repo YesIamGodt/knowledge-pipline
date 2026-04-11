@@ -56,8 +56,6 @@ try:
 except ImportError:
     HAS_BM25 = False
 
-import anthropic
-
 REPO_ROOT = Path(__file__).parent.parent
 WIKI_DIR = REPO_ROOT / "wiki"
 LOG_FILE = WIKI_DIR / "log.md"
@@ -337,6 +335,21 @@ def ingest(source_path: str):
         print(f"Error: file not found: {source_path}")
         sys.exit(1)
 
+    # ========== 第一步：检查 LLM 配置 ==========
+    from core.llm_config import require_llm_config, LLMConfig
+    require_llm_config()
+
+    # 加载配置并初始化客户端
+    llm_config = LLMConfig()
+    cfg = llm_config.get_config()
+    import openai
+    client = openai.OpenAI(
+        base_url=cfg.get("LLM_BASE_URL"),
+        api_key=cfg.get("OPENAI_API_KEY")
+    )
+    model = cfg.get("LLM_MODEL", "gpt-4o-mini")
+    use_openai = True
+
     # Process source file with multi-modal pipeline
     print(f"\n📂 处理文件: {source.name}")
     t0 = time.time()
@@ -386,32 +399,6 @@ def ingest(source_path: str):
         print(f"  source content trimmed for prompt: {len(source_content)} -> {len(source_prompt_content)} chars")
     if context_trimmed:
         print(f"  wiki context trimmed for prompt: {len(wiki_context)} -> {len(wiki_prompt_context)} chars")
-
-    # Load LLM configuration
-    try:
-        from core.llm_config import LLMConfig
-        llm_config = LLMConfig()
-        if llm_config.is_configured():
-            cfg = llm_config.get_config()
-            os.environ["OPENAI_API_KEY"] = cfg.get("OPENAI_API_KEY", "")
-            # Use OpenAI-compatible client
-            import openai
-            client = openai.OpenAI(
-                base_url=cfg.get("LLM_BASE_URL"),
-                api_key=cfg.get("OPENAI_API_KEY")
-            )
-            model = cfg.get("LLM_MODEL", "gpt-4o-mini")
-            use_openai = True
-        else:
-            # Fallback to Anthropic
-            client = anthropic.Anthropic()
-            model = "claude-sonnet-4-6"
-            use_openai = False
-    except ImportError:
-        # Fallback to Anthropic
-        client = anthropic.Anthropic()
-        model = "claude-sonnet-4-6"
-        use_openai = False
 
     # Build metadata description for prompt
     metadata_desc = ""

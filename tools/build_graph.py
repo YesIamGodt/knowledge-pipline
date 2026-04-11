@@ -590,11 +590,9 @@ def build_graph(infer: bool = True, open_browser: bool = False):
         return
 
     # Check LLM configuration if inference is enabled
-    if infer and llm_config and not llm_config.is_configured():
-        print("⚠️  LLM 未配置，无法进行语义推理。")
-        print("   请先运行维基命令（例如：'ingest <file>'）来配置 LLM。")
-        print("   或使用 --no-infer 跳过语义推理。")
-        return
+    if infer:
+        from core.llm_config import require_llm_config
+        require_llm_config()
 
     print(f"🔨 正在从 {len(pages)} 个维基页面构建知识图谱...")
     GRAPH_DIR.mkdir(parents=True, exist_ok=True)

@@ -105,6 +105,40 @@ def check_llm_config() -> Optional[LLMConfig]:
     return config if config.is_configured() else None
 
 
+def require_llm_config() -> LLMConfig:
+    """
+    Require LLM configuration. Exit with clear error message if not configured.
+
+    Call this at the TOP of any pipeline script before doing any work.
+    """
+    config = LLMConfig()
+    if config.is_configured():
+        return config
+
+    print("\n" + "=" * 60)
+    print("⚠️  LLM 未配置！")
+    print("=" * 60)
+    print()
+    print("知识管道需要 LLM API 才能运行。请先配置：")
+    print()
+    print("  方式 1：运行配置命令")
+    print("    python tools/pipeline_config.py")
+    print("    或在 Claude Code 中运行 /pipline-config")
+    print()
+    print("  方式 2：手动创建配置文件")
+    print(f"    配置文件路径: {CONFIG_FILE}")
+    print('    内容格式:')
+    print('    {')
+    print('      "base_url": "https://api.openai.com/v1",')
+    print('      "model": "gpt-4o-mini",')
+    print('      "api_key": "sk-your-key-here"')
+    print('    }')
+    print()
+    print("=" * 60)
+    import sys
+    sys.exit(1)
+
+
 def reload_llm_config() -> LLMConfig:
     """Reload LLM configuration from file."""
     return LLMConfig().reload_config()

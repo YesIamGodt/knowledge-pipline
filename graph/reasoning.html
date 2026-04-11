@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>🧠 推理链 — 不对称相似度和群组融合方法有什么关系？</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #c9d1d9; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; grid-template-rows: auto 1fr auto; height: 100vh; }
+  .header { grid-column: 1 / -1; background: linear-gradient(135deg, #161b22 0%, #1a1f2e 100%);
+             padding: 16px 24px; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 16px; }
+  .header h1 { font-size: 18px; color: #58a6ff; }
+  .header .question { font-size: 14px; color: #8b949e; flex: 1; }
+
+  .sidebar { grid-row: 2 / 4; background: #161b22; border-right: 1px solid #30363d; overflow-y: auto; padding: 16px; }
+  .sidebar h2 { font-size: 15px; color: #58a6ff; margin-bottom: 12px; }
+
+  .chain-node { padding: 8px 12px; margin: 4px 0; border-radius: 6px; font-size: 13px; font-weight: 600; }
+  .type-source { background: #1a3a1a; border-left: 3px solid #4CAF50; color: #a3d9a5; }
+  .type-entity { background: #1a2a3a; border-left: 3px solid #2196F3; color: #90caf9; }
+  .type-concept { background: #3a2a0a; border-left: 3px solid #FF9800; color: #ffcc80; }
+  .type-synthesis { background: #2a1a3a; border-left: 3px solid #9C27B0; color: #ce93d8; }
+  .type-unknown { background: #2a2a2a; border-left: 3px solid #888; }
+
+  .chain-edge { padding: 2px 12px 2px 24px; font-size: 12px; color: #8b949e; }
+  .chain-edge.extracted { color: #4FC3F7; }
+  .chain-edge.inferred { color: #FF8A65; }
+  .edge-arrow { font-family: monospace; }
+  .edge-conf { font-size: 11px; color: #6e7681; }
+
+  #graph { min-height: 300px; border-bottom: 1px solid #30363d; position: relative; }
+  #graph-fallback { display: none; position: absolute; inset: 0; padding: 24px;
+                     color: #8b949e; font-size: 13px; overflow-y: auto; }
+  #graph-fallback.show { display: block; }
+  #graph-fallback h3 { color: #58a6ff; margin-bottom: 12px; }
+  #graph-fallback .fb-node { display: inline-block; padding: 4px 10px; margin: 3px; border-radius: 4px; font-size: 12px; }
+  #graph-fallback .fb-edge { margin: 6px 0; padding-left: 16px; font-size: 12px; }
+  .fb-concept { background: #3a2a0a; color: #ffcc80; border: 1px solid #FF9800; }
+  .fb-source { background: #1a3a1a; color: #a3d9a5; border: 1px solid #4CAF50; }
+  .fb-entity { background: #1a2a3a; color: #90caf9; border: 1px solid #2196F3; }
+
+  .answer-panel { overflow-y: auto; padding: 16px 24px; max-height: 45vh;
+                   background: #161b22; font-size: 13px; line-height: 1.7; }
+  .answer-panel h2, .answer-panel h3, .answer-panel h4 { color: #58a6ff; margin: 12px 0 6px; }
+  .answer-panel .wikilink { background: #1f2a3a; color: #79c0ff; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .answer-panel strong { color: #f0f6fc; }
+
+  .stats { padding: 8px 16px; font-size: 11px; color: #6e7681; border-top: 1px solid #21262d; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="header">
+    <h1>🧠 深度推理链</h1>
+    <div class="question">❓ 不对称相似度和群组融合方法有什么关系？</div>
+  </div>
+  <div class="sidebar">
+    <h2>推理路径</h2>
+    <div class="chain-node type-concept">💡概念 不对称相似度</div>
+<div class="chain-edge extracted">  <span class="edge-arrow">──▶</span>   <span class="edge-label">关联概念</span>  <span class="edge-conf">(100%)</span></div>
+<div class="chain-node type-concept">💡概念 MaxS</div>
+<div class="chain-edge extracted">  <span class="edge-arrow">──▶</span>   <span class="edge-label">关联概念</span>  <span class="edge-conf">(100%)</span></div>
+<div class="chain-node type-concept">💡概念 MaxS算法</div>
+<div class="chain-edge extracted">  <span class="edge-arrow">──▶</span>   <span class="edge-label">关联概念</span>  <span class="edge-conf">(100%)</span></div>
+<div class="chain-node type-concept">💡概念 MaxQ</div>
+<div class="chain-edge extracted">  <span class="edge-arrow">──▶</span>   <span class="edge-label">关联概念</span>  <span class="edge-conf">(100%)</span></div>
+<div class="chain-node type-concept">💡概念 需求描述模型</div>
+<div class="chain-edge extracted">  <span class="edge-arrow">──▶</span>   <span class="edge-label">关联概念</span>  <span class="edge-conf">(100%)</span></div>
+<div class="chain-node type-concept">💡概念 不对称相似度</div>
+<div class="chain-edge extracted">  <span class="edge-arrow">──▶</span>   <span class="edge-label">关联概念</span>  <span class="edge-conf">(100%)</span></div>
+<div class="chain-node type-concept">💡概念 MaxQ</div>
+    <div class="stats">共 6 条路径 · 6 个节点</div>
+  </div>
+  <div id="graph">
+    <div id="graph-fallback">
+      <h3>🔗 推理子图（文本模式）</h3>
+      <p style="margin-bottom:12px;color:#6e7681;">vis.js 图形库加载失败，以文本形式展示关系：</p>
+      <div class="fb-edge">🔗 <span class="fb-node fb-concept">不对称相似度</span> → <em>关联概念</em> → <span class="fb-node fb-concept">MaxS</span></div><div class="fb-edge">🔗 <span class="fb-node fb-concept">不对称相似度</span> → <em>关联概念</em> → <span class="fb-node fb-concept">MaxS算法</span></div><div class="fb-edge">🔗 <span class="fb-node fb-concept">不对称相似度</span> → <em>关联概念</em> → <span class="fb-node fb-concept">MaxQ</span></div><div class="fb-edge">🔗 <span class="fb-node fb-concept">不对称相似度</span> → <em>关联概念</em> → <span class="fb-node fb-concept">需求描述模型</span></div><div class="fb-edge">🔗 <span class="fb-node fb-concept">需求描述模型</span> → <em>关联概念</em> → <span class="fb-node fb-concept">不对称相似度</span></div><div class="fb-edge">🔗 <span class="fb-node fb-concept">MaxS</span> → <em>关联概念</em> → <span class="fb-node fb-concept">MaxQ</span></div>
+    </div>
+  </div>
+  <div class="answer-panel">
+    <h2>💡 综合答案</h2>
+    <h2>不对称相似度与群组融合方法的关系</h2><br>
+<br>
+<h3>核心关系概述</h3><br>
+<br>
+<strong>不对称相似度是群组融合方法的理论基石和计算基础</strong>。两者构成"理论基础-方法应用"的紧密耦合关系：不对称相似度提供了区别于传统聚类的核心数学工具，而群组融合方法（特别是<code class="wikilink">[[MaxQ算法]]</code>和<code class="wikilink">[[MaxS算法]]</code>）则是这一理论在服务计算场景下的具体实现（<strong>4源佐证</strong>）。<br>
+<br>
+<h3>理论基础支撑</h3><br>
+<br>
+<h4>1. 区别于传统聚类的本质特征</h4><br>
+群组融合方法与传统聚类算法（如K-Means）的根本差异在于相似度计算方式：<br>
+- <strong>传统聚类</strong>：基于<strong>对称相似度</strong>，即$Sim(A,B) = Sim(B,A)$（<strong>3源佐证</strong>）<br>
+- <strong>群组融合</strong>：基于<strong>不对称相似度</strong>，即$Sim(A,B) \neq Sim(B,A)$，这是由于不同用户对服务属性的权重偏好存在差异（<strong>4源佐证</strong>）<br>
+<br>
+<h4>2. 需求描述模型与相似度计算的耦合</h4><br>
+<code class="wikilink">[[需求描述模型]]</code> $R = \langle V, W, qt \rangle$ 为不对称相似度提供了数据结构基础：<br>
+- $V$（预期值集合）和 $W$（权重向量）是计算<code class="wikilink">[[不对称相似度]]</code>的输入参数<br>
+- 基于Jaccard系数和权重加权求和：$Sim(i,x) = \sum(W_{x,j} \times sim(V_{i,j}, V_{x,j}))$（<strong>3源佐证</strong>）<br>
+- <strong>关键特性</strong>：使用被比较对象$x$的权重$W_x$而非比较对象$i$的权重，导致方向性差异<br>
+<br>
+<h3>算法实现依赖</h3><br>
+<br>
+<h4>MaxQ算法中的不对称相似度应用</h4><br>
+<code class="wikilink">[[MaxQ算法]]</code>以<strong>平均成组需求量</strong>为优化目标，其群组构建过程完全依赖不对称相似度：<br>
+1. <strong>中心选择</strong>：选取定制数量最大的未进组需求作为中心<br>
+2. <strong>成员筛选</strong>：按候选需求对中心需求的<strong>不对称相似度</strong>递减顺序尝试进组（<strong>3源佐证</strong>）<br>
+3. <strong>约束检查</strong>：基于相似度计算组内成员满意度，满足阈值约束时确认进组<br>
+<br>
+<h4>MaxS算法中的不对称相似度应用</h4><br>
+<code class="wikilink">[[MaxS算法]]</code>以<strong>平均组相似度</strong>为优化目标，同样基于不对称相似度计算：<br>
+1. <strong>中心选择</strong>：选取大定制数量需求作为中心<br>
+2. <strong>成员筛选</strong>：以进组后群组整体相似度最大为原则选择需求进组，其中组相似度计算基于各成员与群组预期值的<strong>不对称相似度</strong>（<strong>3源佐证</strong>）<br>
+3. <strong>质量评价</strong>：以平均组相似度作为群组质量评价指标<br>
+<br>
+<h3>多源视角</h3><br>
+<br>
+各源对两者关系的描述高度一致，均强调不对称相似度是群组融合区别于传统聚类的核心创新：<br>
+<br>
+| 源文件 | 核心观点 |<br>
+|--------|----------|<br>
+| <code class="wikilink">[[group-fusion-method-individual-service-customization-full-thesis]]</code> | 明确指出"现有聚类方法往往基于对称相似度开展...难以直接适用于个人服务定制需求的群组融合问题"，不对称相似度是核心创新点（<strong>仅单源详细描述专利信息</strong>） |<br>
+| <code class="wikilink">[[individual-service-customization-group-fusion-thesis]]</code> | 强调不对称相似度计算考虑用户对不同属性的权重差异，导致A对B的相似度≠B对A的相似度（<strong>仅单源详细描述实验验证数据</strong>） |<br>
+| <code class="wikilink">[[group-fusion-method-individual-service-customization-pdf]]</code> | 详细描述MaxQ和MaxS算法如何利用不对称相似度进行群组构建（<strong>仅单源详细描述算法复杂度分析</strong>） |<br>
+| <code class="wikilink">[[maxq-algorithm-explanation]]</code> | 综合阐述MaxQ基于不对称相似度计算，MaxS同样基于该计算基础（<strong>仅单源提供算法对比表格</strong>） |<br>
+<br>
+<h3>共识与分歧</h3><br>
+<br>
+<h4>✅ 多源共识</h4><br>
+1. <strong>理论基础共识</strong>：不对称相似度是群组融合方法的理论基石，区别于传统聚类的核心特征（<strong>4源共识</strong>）<br>
+2. <strong>计算应用共识</strong>：MaxQ和MaxS算法均基于不对称相似度进行群组构建和成员筛选（<strong>4源共识</strong>）<br>
+3. <strong>模型支撑共识</strong>：需求描述模型为不对称相似度计算提供必要的参数结构（<strong>3源共识</strong>）<br>
+4. <strong>性能优势共识</strong>：基于不对称相似度的群组融合方法相比传统对称相似度聚类算法性能提升显著（MaxQ提升40%以上，MaxS提升25%以上）（<strong>3源共识</strong>）<br>
+<br>
+<h4>⚠️ 观点分歧</h4><br>
+各源对两者关系的描述高度一致，<strong>未发现实质性分歧</strong>。仅在详细程度上存在差异：部分源更侧重理论推导（如<code class="wikilink">[[individual-service-customization-group-fusion-thesis]]</code>），部分源更侧重算法实现（如<code class="wikilink">[[group-fusion-method-individual-service-customization-pdf]]</code>）。<br>
+<br>
+<h4>❓ 单源独有</h4><br>
+1. <strong>专利信息</strong>：仅<code class="wikilink">[[group-fusion-method-individual-service-customization-full-thesis]]</code>提及已申请发明专利《一种个人定制需求的群组融合方法》（申请号：202111536056.5）<br>
+2. <strong>系统实现细节</strong>：仅<code class="wikilink">[[group-fusion-method-individual-service-customization-full-thesis]]</code>详细描述了基于Java/SpringBoot/Vue的仿真系统架构<br>
+3. <strong>算法复杂度分析</strong>：仅<code class="wikilink">[[group-fusion-method-individual-service-customization-pdf]]</code>明确提及MaxQ和MaxS均避免了遍历所有分组可能，采用贪心策略实现高效群组构建<br>
+<br>
+<h3>知识缺口</h3><br>
+<br>
+当前维基页面未提供以下信息：<br>
+1. <strong>不对称相似度计算的数学证明</strong>：为何使用被比较方权重而非比较方权重具有理论合理性（现有描述仅为"更贴合需求匹配实际场景"）<br>
+2. <strong>不同行业场景下的参数调优指南</strong>：如何根据具体服务类型（旅游、餐饮、制造等）设置满意度阈值和相似度权重<br>
+3. <strong>与传统推荐系统的融合机制</strong>：不对称相似度群组融合如何与协同过滤、内容推荐等传统推荐算法结合<br>
+<br>
+<h3>来源</h3><br>
+<br>
+| 页面 | 贡献内容 |<br>
+|------|----------|<br>
+| <code class="wikilink">[[group-fusion-method-individual-service-customization-full-thesis]]</code> | 提供完整的理论框架、算法细节、系统实现和专利信息；阐述不对称相似度与群组融合的核心关系 |<br>
+| <code class="wikilink">[[individual-service-customization-group-fusion-thesis]]</code> | 详细描述需求描述模型、不对称相似度计算方法及MaxQ/MaxS算法流程 |<br>
+| <code class="wikilink">[[group-fusion-method-individual-service-customization-pdf]]</code> | 补充算法复杂度分析和实验验证数据，强调不对称相似度在群组构建中的具体应用 |<br>
+| <code class="wikilink">[[maxq-algorithm-explanation]]</code> | 提供MaxQ和MaxS算法的对比总结，明确两者均基于不对称相似度计算 |<br>
+| <code class="wikilink">[[不对称相似度]]</code> | 定义概念并阐述计算方法，说明其与群组融合的依赖关系 |<br>
+| <code class="wikilink">[[群组融合]]</code> | 界定领域范围，说明不对称相似度是该领域的核心创新点 |<br>
+| <code class="wikilink">[[MaxQ]]</code> / <code class="wikilink">[[MaxQ算法]]</code> | 详细描述算法如何利用不对称相似度进行群组构建 |<br>
+| <code class="wikilink">[[MaxS]]</code> / <code class="wikilink">[[MaxS算法]]</code> | 详细描述算法如何基于不对称相似度优化组相似度 |<br>
+| <code class="wikilink">[[需求描述模型]]</code> | 提供不对称相似度计算所需的参数结构（V, W, qt） |
+  </div>
+</div>
+<script>
+(function() {
+  var script = document.createElement('script');
+  script.src = "https://cdn.jsdelivr.net/npm/vis-network@9/standalone/umd/vis-network.min.js";
+  script.onload = function() {
+    var nodes = new vis.DataSet([
+  {
+    "id": "concepts/群组融合",
+    "label": "不对称相似度",
+    "type": "concept",
+    "type_cn": "概念",
+    "color": {
+      "background": "#FF9800",
+      "border": "#E91E63",
+      "highlight": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      },
+      "hover": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      }
+    },
+    "path": "wiki\\concepts\\群组融合.md"
+  },
+  {
+    "id": "concepts/MaxS",
+    "label": "MaxS",
+    "type": "concept",
+    "type_cn": "概念",
+    "color": {
+      "background": "#FF9800",
+      "border": "#E91E63",
+      "highlight": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      },
+      "hover": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      }
+    },
+    "path": "wiki\\concepts\\MaxS.md"
+  },
+  {
+    "id": "concepts/MaxS算法",
+    "label": "MaxS算法",
+    "type": "concept",
+    "type_cn": "概念",
+    "color": {
+      "background": "#FF9800",
+      "border": "#E91E63",
+      "highlight": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      },
+      "hover": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      }
+    },
+    "path": "wiki\\concepts\\MaxS算法.md"
+  },
+  {
+    "id": "concepts/MaxQ",
+    "label": "MaxQ",
+    "type": "concept",
+    "type_cn": "概念",
+    "color": {
+      "background": "#FF9800",
+      "border": "#E91E63",
+      "highlight": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      },
+      "hover": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      }
+    },
+    "path": "wiki\\concepts\\MaxQ.md"
+  },
+  {
+    "id": "concepts/不对称相似度",
+    "label": "不对称相似度",
+    "type": "concept",
+    "type_cn": "概念",
+    "color": {
+      "background": "#FF9800",
+      "border": "#E91E63",
+      "highlight": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      },
+      "hover": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      }
+    },
+    "path": "wiki\\concepts\\不对称相似度.md"
+  },
+  {
+    "id": "concepts/需求描述模型",
+    "label": "需求描述模型",
+    "type": "concept",
+    "type_cn": "概念",
+    "color": {
+      "background": "#FF9800",
+      "border": "#E91E63",
+      "highlight": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      },
+      "hover": {
+        "background": "#FF9800",
+        "border": "#E91E63"
+      }
+    },
+    "path": "wiki\\concepts\\需求描述模型.md"
+  }
+]);
+    var edges = new vis.DataSet([
+  {
+    "from": "concepts/群组融合",
+    "to": "concepts/MaxS",
+    "type": "EXTRACTED",
+    "label": "关联概念",
+    "color": "#4FC3F7",
+    "confidence": 1.0,
+    "width": 3,
+    "arrows": "to"
+  },
+  {
+    "from": "concepts/群组融合",
+    "to": "concepts/MaxS算法",
+    "type": "EXTRACTED",
+    "label": "关联概念",
+    "color": "#4FC3F7",
+    "confidence": 1.0,
+    "width": 3,
+    "arrows": "to"
+  },
+  {
+    "from": "concepts/群组融合",
+    "to": "concepts/MaxQ",
+    "type": "EXTRACTED",
+    "label": "关联概念",
+    "color": "#4FC3F7",
+    "confidence": 1.0,
+    "width": 3,
+    "arrows": "to"
+  },
+  {
+    "from": "concepts/群组融合",
+    "to": "concepts/需求描述模型",
+    "type": "EXTRACTED",
+    "label": "关联概念",
+    "color": "#4FC3F7",
+    "confidence": 1.0,
+    "width": 3,
+    "arrows": "to"
+  },
+  {
+    "from": "concepts/需求描述模型",
+    "to": "concepts/不对称相似度",
+    "type": "EXTRACTED",
+    "label": "关联概念",
+    "color": "#4FC3F7",
+    "confidence": 1.0,
+    "width": 3,
+    "arrows": "to"
+  },
+  {
+    "from": "concepts/MaxS",
+    "to": "concepts/MaxQ",
+    "type": "EXTRACTED",
+    "label": "关联概念",
+    "color": "#4FC3F7",
+    "confidence": 1.0,
+    "width": 3,
+    "arrows": "to"
+  }
+]);
+    var container = document.getElementById("graph");
+    document.getElementById("graph-fallback").style.display = "none";
+    var network = new vis.Network(container, { nodes: nodes, edges: edges }, {
+      nodes: {
+        shape: "dot", size: 20,
+        font: { color: "#c9d1d9", size: 14, face: "Microsoft YaHei" },
+        borderWidth: 3, borderWidthSelected: 5
+      },
+      edges: {
+        width: 2.5,
+        smooth: { type: "curvedCW", roundness: 0.15 },
+        arrows: { to: { enabled: true, scaleFactor: 0.8 } },
+        font: { size: 11, color: "#8b949e", align: "middle" }
+      },
+      physics: {
+        stabilization: { iterations: 100 },
+        barnesHut: { gravitationalConstant: -5000, springLength: 160 }
+      },
+      interaction: { hover: true }
+    });
+  };
+  script.onerror = function() {
+    document.getElementById("graph-fallback").classList.add("show");
+  };
+  document.head.appendChild(script);
+})();
+</script>
+</body>
+</html>

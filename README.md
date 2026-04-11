@@ -496,10 +496,25 @@ AI：🏥 维基健康报告
 python tools/pipeline_ingest.py <file>            # 摄入
 python tools/pipeline_query.py "<question>"        # 查询
 python tools/pipeline_query.py "<q>" --auto-save   # 查询并自动保存
+python tools/pipeline_query.py "<q>" --rc          # 深度推理链查询
 python tools/pipeline_lint.py                      # 检查
 python tools/build_graph.py                        # 构建图谱
 python tools/pipeline_config.py                    # 配置
 ```
+
+#### 🧠 深度推理链 (`--reasoning-chain` / `--rc`)
+
+在查询时加上 `--rc` 标志，会基于知识图谱进行 **BFS 路径搜索**，展示知识节点之间的推理路径：
+
+```bash
+python tools/pipeline_query.py "不对称相似度和群组融合有什么关系？" --rc
+```
+
+效果：
+- **终端**：输出带有 emoji 类型标签的推理链（💡概念 → 📄源 → 🏢实体）
+- **浏览器**：自动生成并打开 `graph/reasoning.html`，包含交互式推理子图 + 综合答案面板
+
+> 在 `/pipeline-query` 斜杠命令中，当你提到"推理链"、"推理路径"、"深度分析"等关键词时，agent 会自动添加此标志。
 
 ### 环境变量
 

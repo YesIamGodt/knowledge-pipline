@@ -500,10 +500,25 @@ Can also be used independently without Claude Code:
 python tools/pipeline_ingest.py <file>            # Ingest
 python tools/pipeline_query.py "<question>"        # Query
 python tools/pipeline_query.py "<q>" --auto-save   # Query and auto-save
+python tools/pipeline_query.py "<q>" --rc          # Deep reasoning chain query
 python tools/pipeline_lint.py                      # Lint
 python tools/build_graph.py                        # Build graph
 python tools/pipeline_config.py                    # Configure
 ```
+
+#### 🧠 Deep Reasoning Chain (`--reasoning-chain` / `--rc`)
+
+Add the `--rc` flag to perform **BFS path search** over the knowledge graph, revealing reasoning paths between knowledge nodes:
+
+```bash
+python tools/pipeline_query.py "How are asymmetric similarity and group fusion related?" --rc
+```
+
+Effects:
+- **Terminal**: Displays a reasoning chain with emoji type labels (💡Concept → 📄Source → 🏢Entity)
+- **Browser**: Auto-generates and opens `graph/reasoning.html` with an interactive reasoning subgraph + synthesized answer panel
+
+> When using the `/pipeline-query` slash command, mentioning keywords like "reasoning chain", "reasoning path", or "deep analysis" will automatically add this flag.
 
 ### Environment Variables
 

@@ -36,6 +36,67 @@
 
 **一句话：ChatGPT 是你的对话工具。Knowledge Pipline 是你的第二大脑。**
 
+### 🎯 真实案例：看看差距有多大
+
+我们把 18 份真实文档丢进来 — 涵盖医学病例报告、计算机硕士论文、华为云安全审计、Claude Code 源码泄露事件、香港街景照片、音乐会视频 — 领域跨得够远了吧？
+
+然后问它一个文档里**根本没有直接答案**的问题：
+
+> **"AI 在 2026 年真的会引起程序员失业吗？详细回答"**
+
+**ChatGPT 的做法：**
+你把 18 个文件一个一个上传（或者根本放不下），它读完就忘，给你一个泛泛的回答。下次你再问，它什么都不记得。
+
+**Knowledge Pipline 的做法：**
+
+```
+你：/pipline-ingest D:\docs\raw
+AI：✅ 批量摄入完成
+    📝 18 个源文档 → 23 个实体页面 + 36 个概念页面
+    ⚠️ 发现 3 处跨源矛盾
+
+你：/pipline-query AI在2026年真的会引起程序员失业吗？详细回答
+```
+
+它不是凭空回答 — 它从**多个完全不同领域的文档**中提取证据，交叉分析：
+
+```markdown
+## AI 对程序员就业的影响（基于维基知识库分析）
+
+### 来自维基的直接证据
+
+1. **Claude Code 的实际能力**（[[claude-code-leak]]）
+   2026年3月源码泄露事件揭示：Claude Code 已是 ARR 25亿美元的产品，
+   能处理复杂编程任务。说明 AI 编程工具已经进入大规模商用阶段。
+
+2. **学术界的应对信号**（[[group-fusion-method]] [[gnn-based-multi-behavior]]）
+   两篇 2023 年南京邮电大学硕士论文仍以传统方式完成算法设计与实现，
+   说明学术训练体系尚未被 AI 替代。但论文中的编码工作（数据处理、
+   模型实现）恰恰是 AI 最擅长替代的部分。
+
+3. **企业安全审计仍需人工判断**（[[security-incident-brief]] [[audit-report-template]]）
+   华为云安全事件涉及的 IAM 策略审计、变更管理等工作需要对业务上下文
+   的深度理解，短期内无法被 AI 完全替代。
+
+4. **多模态理解正在成熟**（[[beibei-5-scenic-spot-portrait]]
+   [[hong-kong-top-mall-street-scene]] [[juchang-starlight-market-concert]]）
+   系统成功理解了照片和视频内容，表明 AI 的能力边界正在从"写代码"
+   扩展到"理解整个世界"。
+
+### 综合判断
+
+不会"失业"，但会"转型"：
+- ✅ 共识：初级编码工作（CRUD、数据处理）将大幅减少
+- ⚠️ 分歧：高级系统设计是否会被影响（安全审计案例说明暂时不会）
+- ❓ 未知：AI 原生开发范式何时成为主流
+```
+
+**关键区别：**
+- ChatGPT 只能用它的训练数据泛泛而谈
+- Knowledge Pipline 从**你自己的文档**中提取证据，即使这些文档和"程序员失业"完全无关 — 它能发现 Claude Code 商业化数据、学术论文的编码模式、企业安全审计的人工需求之间的**隐含联系**
+
+这就是"知识管道"与"聊天工具"的本质区别：**它不是在回答问题，而是在你的知识体系中寻找答案。**
+
 ---
 
 ## 🚀 快速开始
@@ -275,56 +336,55 @@ lint  →  "项目 X 被 5 个文档提及但没有专属页面"
 
 ---
 
-## 📝 示例：3 分钟感受效果
+## 📝 示例：真实使用流程
 
-在 `raw/examples/` 目录中提供了示例文件，体验完整流程：
-
-### 示例 1：单文档摄入
-
-```bash
-python tools/pipeline_ingest.py raw/examples/transformer-overview.md
-
-# 输出：
-# ✅ 完成。摄入: Transformer Architecture Overview
-# 📝 新建 3 个实体/概念页面
-```
-
-### 示例 2：多文档矛盾检测
-
-```bash
-# 摄入两篇观点不同的文档
-python tools/pipeline_ingest.py raw/examples/ai-optimist.md
-python tools/pipeline_ingest.py raw/examples/ai-skeptic.md
-# → 主动矛盾检测报告自动输出！
-```
-
-### 示例 3：跨源聚合查询
-
-```bash
-python tools/pipeline_query.py "AI 对就业市场的影响是什么？" --auto-save
-# → 展示两篇文章的不同立场 + 共识与分歧分析
-```
-
-### 示例 4：在 Claude Code 中用斜杠命令
+### 示例 1：批量摄入 — 一次丢进去，永久积累
 
 ```
-你：/pipline-config
-AI：选择您使用的 LLM 提供商：「OpenAI」「自定义兼容端点」「Ollama」
-    ... 交互配置完成 ✅
+你：/pipline-ingest D:\docs\raw
+AI：✅ 批量摄入完成 (18个文件)
+    📄 sources: 硕士论文×4, 安全审计×3, 事件报告×2, RAG技术×1, 照片×3, 视频×1 ...
+    🧑 entities: 23 个 (华为云, Anthropic, 林加锋, 汤涛, 南京邮电大学 ...)
+    💡 concepts: 36 个 (RAG, 群组融合, 安全审计, 室性早搏, 图神经网络 ...)
+    ⚠️ 矛盾: 3 处跨源声明冲突
+```
 
-你：/pipline-ingest raw/examples/transformer-overview.md
-AI：✅ 完成。摄入: Transformer Architecture Overview  (总耗时 12.3s)
-    📝 新建 3 个实体/概念页面
+### 示例 2：跨领域查询 — 答案来自你自己的文档
 
-你：/pipline-query 注意力机制为什么重要？
-AI：## 注意力机制的重要性
-    ...（带 [[wikilink]] 引用的结构化回答）...
-    ## 共识与分歧
-    ✅ 多源共识：自注意力提升并行效率
+```
+你：/pipline-query AI在2026年真的会引起程序员失业吗？
+AI：## AI 对程序员就业的影响
+
+    ### 来自维基的直接证据
+    1. [[claude-code-leak]]: Claude Code ARR 已达 25 亿美元，AI 编程工具大规模商用
+    2. [[group-fusion-method]]: 学术论文的编码工作正是 AI 最擅长替代的部分
+    3. [[security-incident-brief]]: 安全审计仍需人工对业务上下文的深度理解
     
+    ### 综合判断
+    ✅ 共识：初级编码工作将大幅减少
+    ⚠️ 分歧：高级系统设计是否受影响
+    ❓ 未知：AI 原生开发范式何时成为主流
+```
+
+### 示例 3：构建知识图谱
+
+```
 你：/pipline-graph
-AI：✅ 图谱已构建。12 节点，18 边，3 个社区
-    → 打开 graph/graph.html 查看
+AI：📊 图谱统计:
+       提取边: 289 条 (来自 [[wikilinks]])
+       推断边: 81 条 (LLM 语义推断)
+       总  计: 370 条边, 80 个节点, 6 个社区
+    ✅ 图谱构建完成 → 打开 graph/graph.html 查看
+```
+
+### 示例 4：维基健康检查
+
+```
+你：/pipline-lint
+AI：🏥 维基健康报告
+    ❌ 断链 2 处: [[不存在的页面]]
+    ⚠️ 孤立页面 1 个: concepts/都市景观.md
+    💡 建议: "华为" 在 5 个页面被引用但缺少专属实体页面
 ```
 
 ---

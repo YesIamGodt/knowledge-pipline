@@ -368,7 +368,7 @@ body {
     and deep reasoning chains — all maintained by your AI agent.
   </p>
   <div class="hero-install" onclick="copyInstall(this)">
-    <span class="prompt">$</span> npx create-data-pipeline
+    <span class="prompt">$</span> npx skills add YesIamGodt/knowledge-pipline
     <span class="copy-hint">click to copy</span>
   </div>
 </section>
@@ -489,7 +489,7 @@ body {
         <td>—</td>
         <td>—</td>
         <td class="cross">complex setup</td>
-        <td class="check">✓ npx create-data-pipeline</td>
+        <td class="check">✓ npx skills add</td>
       </tr>
     </tbody>
   </table>
@@ -508,7 +508,7 @@ body {
 <script>
 // ===== COPY INSTALL COMMAND =====
 function copyInstall(el) {
-  navigator.clipboard.writeText('npx create-data-pipeline');
+  navigator.clipboard.writeText('npx skills add YesIamGodt/knowledge-pipline');
   el.classList.add('copied');
   el.querySelector('.copy-hint').textContent = '✓ copied!';
   setTimeout(() => {
@@ -522,9 +522,9 @@ const STEPS = [
   {
     label: "1/5 · Install",
     lines: [
-      { text: "npx create-data-pipeline", cls: "cmd", delay: 0 },
+      { text: "npx skills add YesIamGodt/knowledge-pipline", cls: "cmd", delay: 0 },
       { text: "", delay: 300 },
-      { text: "📦 Installing knowledge-pipeline skill...", cls: "info", delay: 600 },
+      { text: "📦 Installing knowledge-pipeline skill from GitHub...", cls: "info", delay: 600 },
       { text: "   ✓ tools/pipeline_ingest.py", cls: "success", delay: 200 },
       { text: "   ✓ tools/pipeline_query.py", cls: "success", delay: 150 },
       { text: "   ✓ tools/build_graph.py", cls: "success", delay: 150 },

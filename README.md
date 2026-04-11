@@ -4,6 +4,8 @@
 
 **别再让 AI 帮你搜索了。让它帮你理解。**
 
+[English](README_EN.md) | 中文
+
 [![GitHub](https://img.shields.io/github/stars/YesIamGodt/knowledge-pipline?style=social)](https://github.com/YesIamGodt/knowledge-pipline)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Skills](https://img.shields.io/badge/npx%20skills%20add-knowledge--pipline-00b894)](https://skills.sh)
@@ -190,11 +192,10 @@ pip install opencv-python
 
 ### 📥 多模态摄入
 
-```bash
-# 在 Claude Code 中直接说：
-"摄入 /path/to/research-paper.pdf"
-"ingest ./meeting-notes.docx"
-"摄入 ./product-screenshot.png"
+```
+/pipline-ingest /path/to/research-paper.pdf
+/pipline-ingest ./meeting-notes.docx
+/pipline-ingest ./product-screenshot.png
 ```
 
 | 格式 | 支持 | 处理方式 |
@@ -235,8 +236,8 @@ pip install opencv-python
 
 ### 🧭 跨源聚合查询
 
-```bash
-"查询 transformer 模型的主要创新是什么？"
+```
+/pipline-query "transformer 模型的主要创新是什么？"
 ```
 
 回答不止给你结论，还展示**多源视角**：
@@ -255,8 +256,8 @@ pip install opencv-python
 
 ### 📊 知识图谱
 
-```bash
-"构建知识图谱"
+```
+/pipline-graph
 ```
 
 生成自包含的 `graph.html` — 打开浏览器即可交互探索：
@@ -296,11 +297,11 @@ wiki/
 ### 🔬 学术研究
 
 ```
-摄入 paper1.pdf    →  "Transformer 用注意力机制取代 RNN"
-摄入 paper2.pdf    →  "BERT 的预训练范式更关键" 
-摄入 paper3.pdf    →  "Scaling Laws 才是根本"
-查询 "核心创新是什么？"  →  三篇论文的观点对比 + 共识与分歧
-构建知识图谱        →  概念关系可视化
+/pipline-ingest paper1.pdf     →  "Transformer 用注意力机制取代 RNN"
+/pipline-ingest paper2.pdf     →  "BERT 的预训练范式更关键" 
+/pipline-ingest paper3.pdf     →  "Scaling Laws 才是根本"
+/pipline-query "核心创新是什么？"  →  三篇论文的观点对比 + 共识与分歧
+/pipline-graph                  →  概念关系可视化
 ```
 
 > 读 50 篇论文后，你拥有的不是 50 个文件，而是一座互相交叉引用的知识体系。
@@ -308,30 +309,30 @@ wiki/
 ### 📊 竞品分析
 
 ```
-摄入 openai-blog.md
-摄入 anthropic-report.pdf
-摄入 google-deepmind-paper.pdf
-查询 "三家公司在安全方面的策略对比"
+/pipline-ingest openai-blog.md
+/pipline-ingest anthropic-report.pdf
+/pipline-ingest google-deepmind-paper.pdf
+/pipline-query "三家公司在安全方面的策略对比"
 → 自动展示每家公司的立场、共识点和分歧点
 ```
 
 ### 📚 读书笔记
 
 ```
-摄入 chapter-01.md   →  主题/人物页面自动创建
-摄入 chapter-02.md   →  新信息合并到已有页面
-摄入 chapter-10.md   →  自动发现前后矛盾
-查询 "主角的动机如何演化？"
+/pipline-ingest chapter-01.md   →  主题/人物页面自动创建
+/pipline-ingest chapter-02.md   →  新信息合并到已有页面
+/pipline-ingest chapter-10.md   →  自动发现前后矛盾
+/pipline-query "主角的动机如何演化？"
 ```
 
 ### 🏢 企业知识库
 
 ```
-摄入 会议纪要.docx
-摄入 客户访谈.pdf
-摄入 产品路线图.xlsx
-查询 "客户最常提到的需求是什么？"
-lint  →  "项目 X 被 5 个文档提及但没有专属页面"
+/pipline-ingest 会议纪要.docx
+/pipline-ingest 客户访谈.pdf
+/pipline-ingest 产品路线图.xlsx
+/pipline-query "客户最常提到的需求是什么？"
+/pipline-lint  →  "项目 X 被 5 个文档提及但没有专属页面"
 ```
 
 ---
@@ -454,7 +455,7 @@ AI：🏥 维基健康报告
 
 ```bash
 /pipline-lint
-    /pipline-config
+```
 
 检查项：
 - **孤立页面** — 无入链的页面

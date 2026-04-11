@@ -1,0 +1,119 @@
+# LLM Configuration (contains API keys)
+.llm_config.json
+
+# Claude Code Configuration (contains Python path)
+.claude_settings.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Graph cache & generated output
+graph/.cache.json
+graph/graph.json
+graph/graph.html
+
+# Environment variables
+.env
+
+# User-generated wiki content (keep seed files)
+wiki/sources/
+wiki/entities/
+wiki/concepts/
+wiki/syntheses/
+wiki/claims.json
+wiki/log.md
+
+# Uploads
+uploads/
+
+# Raw user data (keep examples only)
+raw/*.pdf
+raw/*.jpg
+raw/*.png
+raw/*.mp4
+raw/*.avi
+raw/*.mov
+raw/*.mkv
+raw/*.docx
+raw/*.xlsx
+raw/*.pptx
+raw/*.webp
+raw/papers/
+raw/claude*
+raw/微信*
+raw/修改*
+raw/个人*
+raw/RonT*
+
+# Agent-generated task summaries
+BUGFIX_SUMMARY.md
+CHINESE_LOCALIZATION.md
+CONFIGURATION_GUIDE.md
+DEMO_CREATION_SUMMARY.md
+DEMO_GUIDE.md
+IMPLEMENTATION_SUMMARY.md
+INTERACTIVE_CONFIG_EXAMPLE.md
+MULTI_FORMAT_IMPLEMENTATION.md
+MULTI_FORMAT_QUICKREF.md
+MULTI_FORMAT_SUMMARY.md
+MULTI_FORMAT_SUPPORT.md
+MULTI_FORMAT_VERIFICATION.md
+MULTIMODAL_ENHANCEMENT.md
+PIPELINE_CONFIG_SUMMARY.md
+PIPELINE_CONFIG_VERIFICATION.md
+PIPELINE_ENHANCEMENT_SUMMARY.md
+PIPELINE_REFACTOR_SUMMARY.md
+RENAME_GUIDE.md
+SETUP_GUIDE.md
+SUPPORTED_FORMATS.md
+audit-data-pipeline-ppt.md
+dual-mode-architecture.md
+layered-architecture-revised.md
+layered-knowledge-architecture.md
+product-architecture.md
+
+# npm
+node_modules/
+packages/create-data-pipeline/skill/backend/__pycache__/
+packages/create-data-pipeline/skill/backend/processors/__pycache__/
+tools/.env
+
+# Demo uploads
+demo/uploads/
+uploads/

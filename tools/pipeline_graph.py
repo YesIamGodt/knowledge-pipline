@@ -3,9 +3,9 @@
 Build the knowledge graph from the wiki.
 
 Usage:
-    python tools/build_graph.py               # full rebuild (uses default LLM)
-    python tools/build_graph.py --no-infer    # skip semantic inference (faster)
-    python tools/build_graph.py --open        # open graph.html in browser after build
+    python tools/pipeline_graph.py               # full rebuild (uses default LLM)
+    python tools/pipeline_graph.py --no-infer    # skip semantic inference (faster)
+    python tools/pipeline_graph.py --open        # open graph.html in browser after build
 
 Environment Variables (optional):
     LLM_PROVIDER    - claude (default), openai, ollama
@@ -16,16 +16,16 @@ Environment Variables (optional):
 
 Examples:
     # Use Claude (default)
-    python tools/build_graph.py
+    python tools/pipeline_graph.py
 
     # Use OpenAI
-    LLM_PROVIDER=openai LLM_MODEL=gpt-4o-mini python tools/build_graph.py
+    LLM_PROVIDER=openai LLM_MODEL=gpt-4o-mini python tools/pipeline_graph.py
 
     # Use local Ollama
-    LLM_PROVIDER=ollama LLM_MODEL=llama3.2 python tools/build_graph.py
+    LLM_PROVIDER=ollama LLM_MODEL=llama3.2 python tools/pipeline_graph.py
 
     # Use OpenAI-compatible endpoint (e.g., vLLM, LocalAI)
-    LLM_PROVIDER=openai LLM_BASE_URL=http://localhost:8000/v1 LLM_MODEL=qwen2.5 python tools/build_graph.py
+    LLM_PROVIDER=openai LLM_BASE_URL=http://localhost:8000/v1 LLM_MODEL=qwen2.5 python tools/pipeline_graph.py
 
 Outputs:
     graph/graph.json    — node/edge data (cached by SHA256)
@@ -44,10 +44,8 @@ import argparse
 import webbrowser
 import os
 import sys
-import time
 from pathlib import Path
 from datetime import date
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add parent directory to path for config imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -112,13 +110,6 @@ CACHE_FILE = GRAPH_DIR / ".cache.json"
 LOG_FILE = WIKI_DIR / "log.md"
 SCHEMA_FILE = REPO_ROOT / "CLAUDE.md"
 
-# 加载 WikilinkResolver
-try:
-    from core.wikilink import WikilinkResolver
-    HAS_RESOLVER = True
-except ImportError:
-    HAS_RESOLVER = False
-
 # Node type → color mapping
 TYPE_COLORS = {
     "source": "#4CAF50",
@@ -182,7 +173,7 @@ def load_cache() -> dict:
         try:
             return json.loads(CACHE_FILE.read_text())
         except (json.JSONDecodeError, IOError):
-            return {}
+            pass
     return {}
 
 
@@ -214,30 +205,16 @@ def build_nodes(pages: list[Path]) -> list[dict]:
 
 
 def build_extracted_edges(pages: list[Path]) -> list[dict]:
-    """第一遍：确定性 wikilink 边。使用 WikilinkResolver 解析链接。"""
-    # 使用 WikilinkResolver 进行规范化解析
-    if HAS_RESOLVER:
-        resolver = WikilinkResolver(WIKI_DIR)
-    else:
-        resolver = None
-
-    # 同时保留 stem_map 作为降级
+    """Pass 1: deterministic wikilink edges."""
+    # Build a map from stem (lower) -> page_id for resolution
     stem_map = {p.stem.lower(): page_id(p) for p in pages}
-
     edges = []
     seen = set()
     for p in pages:
         content = read_file(p)
         src = page_id(p)
         for link in extract_wikilinks(content):
-            target = None
-            if resolver:
-                resolved_path = resolver.resolve(link)
-                if resolved_path:
-                    target = page_id(resolved_path)
-            else:
-                target = stem_map.get(link.lower())
-
+            target = stem_map.get(link.lower())
             if target and target != src:
                 key = (src, target)
                 if key not in seen:
@@ -246,8 +223,8 @@ def build_extracted_edges(pages: list[Path]) -> list[dict]:
                         "from": src,
                         "to": target,
                         "type": "EXTRACTED",
-                        "type_cn": EDGE_NAMES_CN["EXTRACTED"],
-                        "label": EDGE_NAMES_CN["EXTRACTED"],
+                        "type_cn": EDGE_NAMES_CN["EXTRACTED"],  # Chinese type name
+                        "label": EDGE_NAMES_CN["EXTRACTED"],  # Edge label in Chinese
                         "color": EDGE_COLORS["EXTRACTED"],
                         "confidence": 1.0,
                     })
@@ -277,7 +254,7 @@ def call_llm(prompt: str, provider: str = None) -> str:
         # Use OPENAI_API_KEY from config or environment
         api_key = OPENAI_API_KEY or os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise ValueError("OPENAI_API_KEY not configured. Run a wiki command to set up LLM configuration.")
+            raise ValueError("OPENAI_API_KEY not configured. Run a pipeline command to set up LLM configuration.")
         client = openai.OpenAI(
             base_url=LLM_BASE_URL,
             api_key=api_key
@@ -307,7 +284,9 @@ def call_llm(prompt: str, provider: str = None) -> str:
 
 
 def build_inferred_edges(pages: list[Path], existing_edges: list[dict], cache: dict) -> list[dict]:
-    """Pass 2: LLM-inferred semantic relationships — 并发执行。"""
+    """Pass 2: LLM-inferred semantic relationships (supports multiple providers)."""
+    new_edges = []
+
     # Only process pages that changed since last run
     changed_pages = []
     for p in pages:
@@ -318,23 +297,22 @@ def build_inferred_edges(pages: list[Path], existing_edges: list[dict], cache: d
             cache[str(p)] = h
 
     if not changed_pages:
-        print("  无变更页面 — 跳过语义推断")
+        print("  no changed pages — skipping semantic inference")
         return []
 
     provider = LLM_PROVIDER
     model = LLM_MODEL or ("claude-haiku-4-5-20251001" if provider == "claude" else
                           "gpt-4o-mini" if provider == "openai" else "llama3.2")
-    print(f"  对 {len(changed_pages)} 个变更页面进行语义推断 ({provider}/{model})...")
+    print(f"  inferring relationships for {len(changed_pages)} changed pages using {provider}/{model}...")
 
-    # Build context once (shared across all calls)
+    # Build a summary of existing nodes for context
     node_list = "\n".join(f"- {page_id(p)} ({extract_frontmatter_type(read_file(p))})" for p in pages)
     existing_edge_summary = "\n".join(
         f"- {e['from']} → {e['to']} (EXTRACTED)" for e in existing_edges[:30]
     )
 
-    def _infer_single_page(p: Path) -> list[dict]:
-        """单个页面的推断（在线程中执行）"""
-        content = read_file(p)[:2000]
+    for p in changed_pages:
+        content = read_file(p)[:2000]  # truncate for context efficiency
         src = page_id(p)
 
         prompt = f"""分析这个维基页面，识别与维基中其他页面的隐含语义关系。
@@ -351,15 +329,8 @@ def build_inferred_edges(pages: list[Path], existing_edges: list[dict], cache: d
 
 只返回一个包含新的关系的 JSON 数组（不包括显式 wikilinks 已捕获的关系）：
 [
-  {{"to": "page-id", "relationship": "一行描述", "confidence": 0.0-1.0, "type": "INFERRED 或 AMBIGUOUS", "relation_type": "关系类别"}}
+  {{"to": "page-id", "relationship": "一行描述", "confidence": 0.0-1.0, "type": "INFERRED 或 AMBIGUOUS"}}
 ]
-
-关系类别（relation_type）必须是以下之一：
-- "derives_from" — 一个概念/实体派生自另一个
-- "contradicts" — 声明互相矛盾
-- "supports" — 证据/声明互相支持
-- "implements" — 实现某个概念/方法
-- "related_to" — 其他相关关系
 
 规则：
 - 只包含上面列表中的页面
@@ -374,45 +345,24 @@ def build_inferred_edges(pages: list[Path], existing_edges: list[dict], cache: d
             raw = re.sub(r"\s*```$", "", raw)
 
             inferred = json.loads(raw)
-            edges = []
             for rel in inferred:
                 if isinstance(rel, dict) and "to" in rel:
                     edge_type = rel.get("type", "INFERRED")
                     edge_type_cn = EDGE_NAMES_CN.get(edge_type, EDGE_NAMES_CN["INFERRED"])
-                    relationship_cn = rel.get("relationship", edge_type_cn)
+                    relationship_cn = rel.get("relationship", edge_type_cn)  # Use Chinese relationship or fallback to type
 
-                    edges.append({
+                    new_edges.append({
                         "from": src,
                         "to": rel["to"],
                         "type": edge_type,
-                        "type_cn": edge_type_cn,
-                        "label": relationship_cn,
-                        "relation_type": rel.get("relation_type", "related_to"),
+                        "type_cn": edge_type_cn,  # Chinese type name
+                        "label": relationship_cn,  # Chinese relationship description
                         "color": EDGE_COLORS.get(edge_type, EDGE_COLORS["INFERRED"]),
                         "confidence": rel.get("confidence", 0.7),
                     })
-            return edges
         except (json.JSONDecodeError, TypeError, Exception) as e:
-            print(f"    ⚠️ {src}: {e}")
-            return []
-
-    # 并发推断（最多 3 个线程，避免 API 限流）
-    max_workers = min(3, len(changed_pages))
-    new_edges = []
-    completed = 0
-
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(_infer_single_page, p): p for p in changed_pages}
-        for future in as_completed(futures):
-            p = futures[future]
-            completed += 1
-            ts = time.strftime("%H:%M:%S")
-            try:
-                edges = future.result()
-                new_edges.extend(edges)
-                print(f"    [{ts}] [{completed}/{len(changed_pages)}] {page_id(p)}: +{len(edges)} 条边", flush=True)
-            except Exception as e:
-                print(f"    [{ts}] [{completed}/{len(changed_pages)}] {page_id(p)}: 失败 {e}", flush=True)
+            print(f"    warning: failed to infer for {src}: {e}")
+            pass
 
     return new_edges
 
@@ -462,7 +412,7 @@ def render_html(nodes: list[dict], edges: list[dict]) -> str:
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>LLM Wiki — 知识图谱</title>
+<title>LLM Pipeline — 知识图谱</title>
 <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 <style>
   body {{ margin: 0; background: #1a1a2e; font-family: "Microsoft YaHei", sans-serif; color: #eee; }}
@@ -483,7 +433,7 @@ def render_html(nodes: list[dict], edges: list[dict]) -> str:
 </head>
 <body>
 <div id="controls">
-  <h3>📊 LLM 维基知识图谱</h3>
+  <h3>📊 LLM 管道知识图谱</h3>
   <input id="search" type="text" placeholder="搜索节点..." oninput="searchNodes(this.value)">
   <div style="margin-bottom:8px">{legend_items}</div>
   <div style="margin-top:8px;font-size:11px;color:#aaa">
@@ -578,7 +528,6 @@ def append_log(entry: str):
 def build_graph(infer: bool = True, open_browser: bool = False):
     pages = all_wiki_pages()
     today = date.today().isoformat()
-    t0 = time.time()
 
     if not pages:
         print("⚠️  维基为空。请先摄入一些源文档。")
@@ -587,7 +536,7 @@ def build_graph(infer: bool = True, open_browser: bool = False):
     # Check LLM configuration if inference is enabled
     if infer and llm_config and not llm_config.is_configured():
         print("⚠️  LLM 未配置，无法进行语义推理。")
-        print("   请先运行维基命令（例如：'ingest <file>'）来配置 LLM。")
+        print("   请先运行管道命令（例如：'ingest <file>'）来配置 LLM。")
         print("   或使用 --no-infer 跳过语义推理。")
         return
 
@@ -597,23 +546,20 @@ def build_graph(infer: bool = True, open_browser: bool = False):
     cache = load_cache()
 
     # Pass 1: extracted edges
-    t1 = time.time()
     print("  第一遍：提取 wikilinks...")
     nodes = build_nodes(pages)
     edges = build_extracted_edges(pages)
-    print(f"  → {len(edges)} 条提取的边 ({time.time()-t1:.1f}s)")
+    print(f"  → {len(edges)} 条提取的边")
 
     # Pass 2: inferred edges
     if infer:
-        t2 = time.time()
-        print("  第二遍：推断语义关系（并发）...")
+        print("  第二遍：推断语义关系...")
         inferred = build_inferred_edges(pages, edges, cache)
         edges.extend(inferred)
-        print(f"  → {len(inferred)} 条推断的边 ({time.time()-t2:.1f}s)")
+        print(f"  → {len(inferred)} 条推断的边")
         save_cache(cache)
 
     # Community detection
-    t3 = time.time()
     print("  运行 Louvain 社区检测...")
     communities = detect_communities(nodes, edges)
     for node in nodes:
@@ -622,24 +568,10 @@ def build_graph(infer: bool = True, open_browser: bool = False):
             node["color"] = COMMUNITY_COLORS[comm_id % len(COMMUNITY_COLORS)]
         node["group"] = comm_id
 
-    # Save graph.json（包含社区信息）
-    # 构建社区摘要
-    community_summary = {}
-    for node in nodes:
-        cid = node.get("group", -1)
-        if cid >= 0:
-            if cid not in community_summary:
-                community_summary[cid] = []
-            community_summary[cid].append(node["label"])
-
-    graph_data = {
-        "nodes": nodes,
-        "edges": edges,
-        "communities": community_summary,
-        "built": today,
-    }
+    # Save graph.json
+    graph_data = {"nodes": nodes, "edges": edges, "built": today}
     GRAPH_JSON.write_text(json.dumps(graph_data, indent=2, ensure_ascii=False))
-    print(f"  ✅ 已保存: graph/graph.json  ({len(nodes)} 个节点, {len(edges)} 条边, {len(community_summary)} 个社区)")
+    print(f"  ✅ 已保存: graph/graph.json  ({len(nodes)} 个节点, {len(edges)} 条边)")
 
     # Save graph.html
     html = render_html(nodes, edges)
@@ -653,15 +585,12 @@ def build_graph(infer: bool = True, open_browser: bool = False):
 
     append_log(f"## [{today}] graph | 知识图谱已重建\n\n{len(nodes)} 个节点, {len(edges)} 条边 ({extracted_count} 条提取, {inferred_count} 条推断, {ambiguous_count} 条模糊).")
 
-    total_time = time.time() - t0
-    print(f"\n✅ 图谱构建完成 (总耗时 {total_time:.1f}s)")
-
     if open_browser:
         webbrowser.open(f"file://{GRAPH_HTML.resolve()}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Build LLM Wiki knowledge graph")
+    parser = argparse.ArgumentParser(description="Build LLM Pipeline knowledge graph")
     parser.add_argument("--no-infer", action="store_true", help="Skip semantic inference (faster)")
     parser.add_argument("--open", action="store_true", help="Open graph.html in browser")
     args = parser.parse_args()

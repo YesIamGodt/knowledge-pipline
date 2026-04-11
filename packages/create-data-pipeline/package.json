@@ -1,0 +1,32 @@
+{
+  "name": "create-data-pipeline",
+  "version": "1.0.0",
+  "description": "Install the data-pipeline skill for Claude Code — multimodal document ingestion, knowledge fusion, cross-source query, and knowledge graph builder.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "skill",
+    "data-pipeline",
+    "knowledge-base",
+    "wiki",
+    "llm",
+    "multimodal",
+    "rag"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bin": {
+    "create-data-pipeline": "./bin/install.mjs"
+  },
+  "files": [
+    "bin/",
+    "skill/"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}

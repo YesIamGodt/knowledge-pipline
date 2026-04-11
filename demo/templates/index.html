@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Wiki Agent</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+                <span>LLM Wiki Agent</span>
+            </div>
+            <div class="nav-links">
+                <a href="#upload" class="nav-link">Ingest</a>
+                <a href="#explore" class="nav-link">Explore</a>
+                <a href="#query" class="nav-link">Query</a>
+                <a href="#graph" class="nav-link">Graph</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1 class="hero-title">Your Knowledge,<br>Continuously Evolving</h1>
+            <p class="hero-subtitle">Upload documents. Extract insights. Build connections. Ask questions. Watch your wiki grow smarter with every interaction.</p>
+            <div class="hero-cta">
+                <a href="#upload" class="btn btn-primary">Get Started</a>
+                <a href="#explore" class="btn btn-secondary">Explore Wiki</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Configuration Section -->
+    <section class="config-section">
+        <div class="container">
+            <div class="config-card" id="configCard">
+                <h2 class="section-title">LLM Configuration</h2>
+                <div id="configStatus" class="config-status">
+                    <span class="status-indicator status-loading"></span>
+                    <span class="status-text">Checking configuration...</span>
+                </div>
+                <form id="configForm" class="config-form" style="display: none;">
+                    <div class="form-group">
+                        <label for="baseUrl">API Base URL</label>
+                        <input type="text" id="baseUrl" name="baseUrl" placeholder="https://api.openai.com/v1" required>
+                        <small class="form-help">Your OpenAI-compatible API endpoint</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="model">Model Name</label>
+                        <input type="text" id="model" name="model" placeholder="gpt-4o-mini" required>
+                        <small class="form-help">e.g., gpt-4o-mini, deepseek-chat, llama3.2</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKey">API Key</label>
+                        <input type="password" id="apiKey" name="apiKey" placeholder="sk-..." required>
+                        <small class="form-help">Your API key (kept private)</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                </form>
+                <div id="configuredInfo" style="display: none;">
+                    <p class="config-info">✅ Configured with <strong id="configuredModel"></strong></p>
+                    <button id="reconfigureBtn" class="btn btn-secondary">Reconfigure</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPages">0</div>
+                    <div class="stat-label">Total Pages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalSources">0</div>
+                    <div class="stat-label">Sources</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalEntities">0</div>
+                    <div class="stat-label">Entities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalConcepts">0</div>
+                    <div class="stat-label">Concepts</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section id="upload" class="upload-section">
+        <div class="container">
+            <h2 class="section-title">Ingest Documents</h2>
+            <p class="section-subtitle">Upload documents to enrich your wiki. The system will extract entities, concepts, and relationships automatically.</p>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <h3 class="upload-title">Drop files here</h3>
+                <p class="upload-text">or click to browse</p>
+                <p class="upload-hint">Supports .md, .txt, .pdf files</p>
+                <input type="file" id="fileInput" class="file-input" accept=".md,.txt,.pdf" multiple>
+                <button class="btn btn-primary upload-btn">Select Files</button>
+            </div>
+
+            <div id="uploadProgress" class="upload-progress" style="display: none;">
+                <div class="progress-item">
+                    <div class="progress-info">
+                        <span class="progress-filename" id="progressFilename">filename.md</span>
+                        <span class="progress-status" id="progressStatus">Uploading...</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uploadResults" class="upload-results" style="display: none;">
+                <h4>Ingestion Results</h4>
+                <div id="uploadResultsList" class="results-list"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Explore Section -->
+    <section id="explore" class="explore-section">
+        <div class="container">
+            <h2 class="section-title">Explore Wiki</h2>
+            <p class="section-subtitle">Browse your knowledge base by category</p>
+
+            <div class="explore-tabs">
+                <button class="tab-btn active" data-tab="sources">Sources</button>
+                <button class="tab-btn" data-tab="entities">Entities</button>
+                <button class="tab-btn" data-tab="concepts">Concepts</button>
+                <button class="tab-btn" data-tab="syntheses">Syntheses</button>
+            </div>
+
+            <div id="wikiContent" class="wiki-content">
+                <div id="sourcesTab" class="tab-content active">
+                    <div id="sourcesList" class="items-list"></div>
+                </div>
+                <div id="entitiesTab" class="tab-content">
+                    <div id="entitiesList" class="items-list"></div>
+                </div>
+                <div id="conceptsTab" class="tab-content">
+                    <div id="conceptsList" class="items-list"></div>
+                </div>
+                <div id="synthesesTab" class="tab-content">
+                    <div id="synthesesList" class="items-list"></div>
+                </div>
+            </div>
+
+            <div id="pageModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modalTitle">Page Title</h3>
+                        <button class="modal-close" id="modalClose">&times;</button>
+                    </div>
+                    <div id="modalBody" class="modal-body"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Query Section -->
+    <section id="query" class="query-section">
+        <div class="container">
+            <h2 class="section-title">Query Your Knowledge</h2>
+            <p class="section-subtitle">Ask questions and get answers based on your wiki. Each answer can become part of your knowledge base.</p>
+
+            <div class="query-container">
+                <form id="queryForm" class="query-form">
+                    <div class="query-input-wrapper">
+                        <input type="text" id="queryInput" class="query-input" placeholder="Ask anything about your knowledge base..." required>
+                        <button type="submit" class="query-submit">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="queryResults" class="query-results" style="display: none;">
+                    <div class="answer-header">
+                        <h3>Answer</h3>
+                        <button id="saveSynthesisBtn" class="btn btn-secondary btn-sm">Save to Wiki</button>
+                    </div>
+                    <div id="answerContent" class="answer-content"></div>
+                    <div id="answerSources" class="answer-sources">
+                        <h4>Sources</h4>
+                        <div id="sourcesList" class="sources-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Graph Section -->
+    <section id="graph" class="graph-section">
+        <div class="container">
+            <h2 class="section-title">Knowledge Graph</h2>
+            <p class="section-subtitle">Visualize connections between entities, concepts, and sources</p>
+
+            <div class="graph-container">
+                <div id="graphCanvas" class="graph-canvas"></div>
+                <div class="graph-controls">
+                    <button class="btn btn-secondary btn-sm" id="refreshGraph">Refresh Graph</button>
+                    <button class="btn btn-secondary btn-sm" id="resetZoom">Reset Zoom</button>
+                </div>
+            </div>
+
+            <div class="graph-legend">
+                <div class="legend-item">
+                    <span class="legend-color legend-source"></span>
+                    <span class="legend-label">Sources</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color legend-entity"></span>
+                    <span class="legend-label">Entities</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color legend-concept"></span>
+                    <span class="legend-label">Concepts</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color legend-synthesis"></span>
+                    <span class="legend-label">Syntheses</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 LLM Wiki Agent. Built with Claude Code.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

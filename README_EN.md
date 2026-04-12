@@ -280,6 +280,22 @@ Generates a self-contained `graph.html` — open in browser to interactively exp
 - Edges distinguish explicit links from inferred relationships
 - Search and zoom support
 
+### 📑 Live PPT — Knowledge-Driven Presentations
+
+```
+/pipeline-ppt "AI Security Analysis"
+/pipeline-ppt "Competitive Analysis" --theme apple --pages 10
+```
+
+**Turn your Wiki knowledge base into an interactive PPT with one command**:
+- 🧠 **LLM-powered layout** — Auto-extracts key points, plans slide structure
+- 🎨 **5 theme presets** — Dark / Light / Apple / Warm / Minimal, one-click switch
+- 📖 **Source attribution** — Every slide footer shows the Wiki source page
+- ⌨️ **Keyboard navigation** — ←→ navigate · F fullscreen · Home/End
+- 📄 **Self-contained HTML** — One file, share with anyone
+
+> No more spending 2 hours making slides. Just say "make a security analysis PPT from these knowledge pages".
+
 ---
 
 ## 📂 Knowledge Base Structure
@@ -402,11 +418,26 @@ AI:  🏥 Wiki Health Report
      💡 Suggestion: "Huawei" referenced in 5 pages but has no dedicated entity page
 ```
 
+### Example 5: One-Command Live PPT
+
+```
+You: /pipeline-ppt "AI Security Trends" --theme apple
+AI:  📑 Live PPT Generator
+     📚 Reading 18 sources, 23 entities, 36 concepts
+     🧠 Generated 10 slides
+     ✅ Saved to graph/liveppt.html
+     🌐 Opened in browser
+
+→ Interactive presentation in browser: ←→ navigate · F fullscreen · 5 themes
+→ Every slide cites Wiki sources — fully traceable
+→ Self-contained HTML — share directly with colleagues
+```
+
 ---
 
 ## ⚙️ Command Reference
 
-After installation, you get **five core slash commands**, available in any Claude Code project:
+After installation, you get **six core slash commands**, available in any Claude Code project:
 
 ### ⚙️ `/pipeline-config` — Configure LLM API
 
@@ -463,6 +494,24 @@ Output:
 - `graph/graph.json` — Nodes + edges + community data
 - `graph/graph.html` — Open in browser to explore interactively
 
+### 📑 `/pipeline-ppt` — Generate Live PPT
+
+Generate interactive HTML presentations from wiki knowledge.
+
+```bash
+/pipeline-ppt "AI Security Trends"
+/pipeline-ppt "Competitive Analysis" --theme apple --pages 10
+/pipeline-ppt "Project Summary" --sources claude-code-leak,rag-tech --open
+```
+
+Parameters:
+- `--pages N` — Target slide count (default: auto)
+- `--theme` — dark / light / apple / warm / minimal
+- `--sources` — Comma-separated source slugs to use
+- `--open` — Auto-open in browser after generation
+
+Output: `graph/liveppt.html` — self-contained HTML, share with anyone.
+
 ### 🏥 `/pipeline-lint` — Wiki Health Check
 
 Check knowledge wiki completeness and consistency.
@@ -486,6 +535,7 @@ Checks for:
 | `ingest <file>` | `/pipeline-ingest` |
 | `query: <question>` | `/pipeline-query` |
 | `build graph` | `/pipeline-graph` |
+| `make ppt` / `generate slides` | `/pipeline-ppt` |
 | `lint` / `check wiki` | `/pipeline-lint` |
 
 ### Python CLI
@@ -499,6 +549,7 @@ python tools/pipeline_query.py "<q>" --auto-save   # Query and auto-save
 python tools/pipeline_query.py "<q>" --rc          # Deep reasoning chain query
 python tools/pipeline_lint.py                      # Lint
 python tools/build_graph.py                        # Build graph
+python tools/pipeline_ppt.py "topic" --open          # Generate Live PPT
 python tools/pipeline_config.py                    # Configure
 ```
 

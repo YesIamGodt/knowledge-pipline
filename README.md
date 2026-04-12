@@ -282,6 +282,22 @@ pip install opencv-python
 - 边区分显式链接和推断关系
 - 支持搜索和缩放
 
+### 📑 Live PPT — 知识驱动的演示文稿
+
+```
+/pipeline-ppt "AI安全趋势分析"
+/pipeline-ppt "竞品对比" --theme apple --pages 10
+```
+
+**一句话把 Wiki 知识库变成交互式 PPT**：
+- 🧠 **LLM 智能编排** — 自动从知识库中提取要点，规划幻灯片结构
+- 🎨 **5 种主题风格** — 深色科技 / 亮色清新 / Apple 极简 / 暖色复古 / 极简黑白，一键切换
+- 📖 **每页标注来源** — 每张幻灯片底部标注 Wiki 来源页面，可追溯
+- ⌨️ **键盘导航** — ←→ 翻页 · F 全屏 · Home/End 首尾页
+- 📄 **自包含 HTML** — 一个文件，发给任何人直接打开
+
+> 再也不用花 2 小时做 PPT 了。你只需要说"帮我用这些知识做一个安全分析 PPT"。
+
 ---
 
 ## 📂 知识库结构
@@ -404,11 +420,26 @@ AI：🏥 维基健康报告
     💡 建议: "华为" 在 5 个页面被引用但缺少专属实体页面
 ```
 
+### 示例 5：一句话生成 Live PPT
+
+```
+你：/pipeline-ppt "AI安全趋势分析" --theme apple
+AI：📑 Live PPT Generator
+    📚 Reading 18 sources, 23 entities, 36 concepts
+    🧠 Generated 10 slides
+    ✅ Saved to graph/liveppt.html
+    🌐 Opened in browser
+
+→ 打开浏览器即可演示：←→翻页 · F全屏 · 5种主题实时切换
+→ 每页底部标注 Wiki 来源，可追溯
+→ 自包含 HTML，直接发给同事
+```
+
 ---
 
 ## ⚙️ 命令参考
 
-安装后，你将获得 **五个核心斜杠命令**，在 Claude Code 任意项目中可用：
+安装后，你将获得 **六个核心斜杠命令**，在 Claude Code 任意项目中可用：
 
 ### ⚙️ `/pipeline-config` — 配置 LLM API
 
@@ -465,6 +496,24 @@ AI：🏥 维基健康报告
 - `graph/graph.json` — 节点 + 边 + 社区数据
 - `graph/graph.html` — 浏览器打开即可交互探索
 
+### 📑 `/pipeline-ppt` — 生成 Live PPT
+
+基于知识维基自动生成交互式 HTML 演示文稿。
+
+```bash
+/pipeline-ppt "AI安全趋势分析"
+/pipeline-ppt "竞品对比" --theme apple --pages 10
+/pipeline-ppt "项目总结" --sources claude-code-leak,rag-tech --open
+```
+
+参数：
+- `--pages N` — 指定幻灯片数量（默认自动）
+- `--theme` — dark / light / apple / warm / minimal
+- `--sources` — 指定使用的源文档（逗号分隔 slug）
+- `--open` — 生成后自动在浏览器打开
+
+输出：`graph/liveppt.html` — 自包含 HTML，发给任何人直接打开。
+
 ### 🏥 `/pipeline-lint` — 维基健康检查
 
 检查知识维基的完整性和一致性。
@@ -488,6 +537,7 @@ AI：🏥 维基健康报告
 | `摄入 <文件>` / `ingest <file>` | `/pipeline-ingest` |
 | `查询 <问题>` / `query: <question>` | `/pipeline-query` |
 | `构建图谱` / `build graph` | `/pipeline-graph` |
+| `做PPT` / `生成演示` / `make ppt` | `/pipeline-ppt` |
 | `检查` / `lint` | `/pipeline-lint` |
 
 ### Python CLI
@@ -501,6 +551,7 @@ python tools/pipeline_query.py "<q>" --auto-save   # 查询并自动保存
 python tools/pipeline_query.py "<q>" --rc          # 深度推理链查询
 python tools/pipeline_lint.py                      # 检查
 python tools/build_graph.py                        # 构建图谱
+python tools/pipeline_ppt.py "主题" --open          # 生成 Live PPT
 python tools/pipeline_config.py                    # 配置
 ```
 

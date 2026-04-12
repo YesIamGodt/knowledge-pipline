@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live PPT — Knowledge Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== THEME VARIABLES ===== */
+:root {
+  --bg-deep: #06090f;
+  --bg-card: #0d1117;
+  --bg-slide: #0f1318;
+  --bg-input: #161b22;
+  --border: #1b2230;
+  --border-glow: #30363d;
+  --text: #e6edf3;
+  --text-dim: #7d8590;
+  --text-muted: #484f58;
+  --accent-blue: #58a6ff;
+  --accent-cyan: #56d4dd;
+  --accent-green: #3fb950;
+  --accent-orange: #f0883e;
+  --accent-purple: #bc8cff;
+  --accent-red: #f85149;
+  --accent-yellow: #d29922;
+  --glow-blue: rgba(88, 166, 255, 0.12);
+  --glow-purple: rgba(188, 140, 255, 0.12);
+  /* slide theming — changed by style commands */
+  --slide-bg: #0f1318;
+  --slide-text: #e6edf3;
+  --slide-dim: #7d8590;
+  --slide-accent: #58a6ff;
+  --slide-accent2: #bc8cff;
+  --slide-border: #1b2230;
+  --slide-card-bg: rgba(255,255,255,0.03);
+  --slide-font: 'Space Grotesk', 'Noto Sans SC', sans-serif;
+  --slide-radius: 16px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg-deep); color: var(--text); font-family: 'Space Grotesk','Noto Sans SC',sans-serif; height: 100vh; overflow: hidden; }
+
+/* ===== LAYOUT ===== */
+.app { display: flex; height: 100vh; }
+
+/* --- LEFT: Chat Panel --- */
+.panel-left {
+  width: 420px; min-width: 420px;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  background: var(--bg-card);
+}
+.panel-header {
+  padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-header h1 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.panel-header .gradient { background: linear-gradient(135deg,var(--accent-cyan),var(--accent-blue),var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.header-actions { display: flex; gap: 6px; }
+.ha-btn {
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-dim);
+  padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit;
+  transition: all .2s;
+}
+.ha-btn:hover { border-color: var(--accent-blue); color: var(--text); }
+
+/* --- Wiki Picker --- */
+.wiki-picker {
+  border-bottom: 1px solid var(--border); padding: 10px 20px;
+  max-height: 0; overflow: hidden; transition: max-height .3s, padding .3s;
+}
+.wiki-picker.open { max-height: 320px; padding: 14px 20px; overflow-y: auto; }
+.wiki-picker-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+.wiki-picker-label span { cursor: pointer; color: var(--accent-blue); font-size: 12px; text-transform: none; letter-spacing: 0; }
+.wiki-group { margin-bottom: 10px; }
+.wiki-group-title { font-size: 11px; color: var(--accent-blue); font-weight: 600; margin-bottom: 4px; padding-left: 2px; }
+.wiki-item {
+  display: flex; align-items: center; gap: 8px; padding: 5px 8px;
+  border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--text-dim);
+  transition: background .15s;
+}
+.wiki-item:hover { background: var(--bg-input); }
+.wiki-item input[type=checkbox] { accent-color: var(--accent-blue); width: 14px; height: 14px; cursor: pointer; }
+.wiki-item .wi-icon { font-size: 11px; opacity: .6; flex-shrink: 0; }
+.wiki-item .wi-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wiki-item.selected { color: var(--text); background: rgba(88,166,255,.06); }
+.selected-count { font-size: 11px; color: var(--accent-green); padding: 4px 0 0 2px; }
+
+/* --- Chat Messages --- */
+.chat-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.msg {
+  max-width: 92%; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.65;
+  animation: msg-in .3s ease;
+}
+@keyframes msg-in { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
+.msg.user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, rgba(88,166,255,.15), rgba(188,140,255,.1));
+  border: 1px solid rgba(88,166,255,.2);
+  color: var(--text);
+}
+.msg.ai {
+  align-self: flex-start;
+  background: var(--bg-input); border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.msg.ai .action-tag {
+  display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin-right: 4px;
+}
+.msg.system {
+  align-self: center; text-align: center;
+  background: transparent; color: var(--text-muted); font-size: 12px;
+  padding: 4px 12px;
+}
+.tag-wiki { background: rgba(63,185,80,.15); color: var(--accent-green); }
+.tag-gen { background: rgba(188,140,255,.15); color: var(--accent-purple); }
+.tag-style { background: rgba(240,136,62,.15); color: var(--accent-orange); }
+.tag-edit { background: rgba(88,166,255,.15); color: var(--accent-blue); }
+.tag-upload { background: rgba(210,153,34,.15); color: var(--accent-yellow); }
+.typing-indicator { display: flex; gap: 4px; padding: 12px 14px; align-self: flex-start; }
+.typing-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: typing .8s infinite; }
+.typing-indicator span:nth-child(2) { animation-delay: .15s; }
+.typing-indicator span:nth-child(3) { animation-delay: .3s; }
+@keyframes typing { 0%,60%,100%{opacity:.3;transform:translateY(0)} 30%{opacity:1;transform:translateY(-4px)} }
+
+/* --- Chat Input --- */
+.chat-input-area {
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; align-items: flex-end; background: var(--bg-card);
+}
+.chat-input {
+  flex: 1; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; color: var(--text); font-size: 14px; font-family: inherit;
+  resize: none; outline: none; min-height: 40px; max-height: 120px; line-height: 1.5;
+  transition: border-color .2s;
+}
+.chat-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px var(--glow-blue); }
+.chat-input::placeholder { color: var(--text-muted); }
+.chat-send {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, #58a6ff, #bc8cff);
+  border: none; color: #fff; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .2s; flex-shrink: 0;
+}
+.chat-send:hover { opacity: .85; }
+.chat-send:disabled { opacity: .3; cursor: not-allowed; }
+.chat-upload-btn {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted);
+  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .2s; flex-shrink: 0;
+}
+.chat-upload-btn:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+.upload-file-info {
+  display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+  background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.2);
+  border-radius: 8px; font-size: 11px; color: var(--accent-yellow); margin-bottom: 6px;
+}
+.upload-file-info .remove-file { cursor: pointer; opacity: .6; }
+.upload-file-info .remove-file:hover { opacity: 1; }
+
+/* --- RIGHT: Slide Panel --- */
+.panel-right { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.slide-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px; border-bottom: 1px solid var(--border);
+  background: var(--bg-card); z-index: 2;
+}
+.slide-counter { font-size: 12px; color: var(--text-dim); font-family: 'JetBrains Mono',monospace; }
+.toolbar-btns { display: flex; gap: 6px; }
+.tb {
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-dim);
+  padding: 5px 12px; border-radius: 7px; font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: all .2s;
+}
+.tb:hover { border-color: var(--accent-blue); color: var(--text); }
+.btn-stop { border-color: var(--accent-red); color: var(--accent-red); display: none; }
+.btn-stop:hover { background: rgba(248,81,73,.1); }
+.btn-stop.visible { display: inline-flex; align-items: center; gap: 4px; }
+
+/* --- SLIDE STRIP (thumbnails) --- */
+.slide-strip {
+  display: flex; gap: 8px; padding: 10px 20px; overflow-x: auto;
+  border-bottom: 1px solid var(--border); background: var(--bg-card);
+  min-height: 72px; align-items: center;
+}
+.slide-strip:empty::after {
+  content: '选择 Wiki 文章并发送指令开始'; color: var(--text-muted); font-size: 12px; width: 100%; text-align: center;
+}
+.thumb {
+  width: 96px; height: 54px; border-radius: 6px; border: 2px solid transparent;
+  background: var(--bg-slide); flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--text-muted); text-align: center; padding: 4px;
+  transition: all .2s; position: relative; overflow: hidden;
+}
+.thumb:hover { border-color: var(--border-glow); }
+.thumb.active { border-color: var(--accent-blue); box-shadow: 0 0 0 2px var(--glow-blue); }
+.thumb .thumb-num {
+  position: absolute; top: 2px; left: 4px; font-size: 8px;
+  font-family: 'JetBrains Mono',monospace; color: var(--text-muted); opacity: .7;
+}
+.thumb.generating { animation: thumb-pulse 1.5s infinite; }
+@keyframes thumb-pulse { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 12px var(--glow-purple)} }
+
+/* --- SLIDE CANVAS --- */
+.slide-canvas {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 24px; position: relative;
+}
+.slide-canvas::before {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%); width: 500px; height: 500px;
+  background: radial-gradient(ellipse, var(--glow-purple) 0%, transparent 70%);
+  pointer-events: none; opacity: .3;
+}
+.slide {
+  width: 100%; max-width: 960px; aspect-ratio: 16/9;
+  background: var(--slide-bg); border: 1px solid var(--slide-border);
+  border-radius: var(--slide-radius); padding: 44px 52px;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  font-family: var(--slide-font);
+  transition: background .5s, border-color .5s, border-radius .5s;
+}
+.slide.entering { animation: slide-enter .45s ease forwards; }
+@keyframes slide-enter { from{opacity:0;transform:translateY(24px) scale(.97)} to{opacity:1;transform:none} }
+
+.slide-badge {
+  position: absolute; top: 18px; left: 24px;
+  font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--slide-accent); opacity: .55;
+}
+.slide-num {
+  position: absolute; bottom: 16px; right: 24px;
+  font-size: 12px; font-family: 'JetBrains Mono',monospace; color: var(--text-muted);
+}
+.slide-source {
+  position: absolute; bottom: 16px; left: 24px;
+  font-size: 9px; color: var(--text-muted); max-width: 55%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.slide-source .wiki-tag {
+  background: rgba(63,185,80,.15); color: var(--accent-green);
+  padding: 1px 5px; border-radius: 3px; font-weight: 600; margin-right: 3px; font-size: 8px;
+}
+.slide h2 { font-size: clamp(22px,2.8vw,38px); font-weight: 700; line-height: 1.2; margin-bottom: 14px; color: var(--slide-text); }
+.slide h2 .gradient { background: linear-gradient(135deg,var(--slide-accent),var(--slide-accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.slide h3 { font-size: 16px; font-weight: 600; color: var(--slide-accent); margin-bottom: 10px; }
+.slide p { font-size: 14.5px; line-height: 1.7; color: var(--slide-dim); margin-bottom: 8px; }
+.slide ul { list-style: none; padding: 0; }
+.slide ul li { position: relative; padding-left: 18px; font-size: 14px; line-height: 1.8; color: var(--slide-dim); }
+.slide ul li::before { content: '▸'; position: absolute; left: 0; color: var(--slide-accent); font-weight: 700; }
+.slide .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 6px; }
+.slide .comp-card { background: var(--slide-card-bg); border: 1px solid var(--slide-border); border-radius: 10px; padding: 14px 16px; }
+.slide .comp-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.slide .comp-card.left h4 { color: var(--accent-orange); }
+.slide .comp-card.right h4 { color: var(--accent-green); }
+.slide .comp-card p { font-size: 12.5px; line-height: 1.6; }
+.slide .big-number {
+  font-size: 56px; font-weight: 700; font-family: 'JetBrains Mono',monospace;
+  background: linear-gradient(135deg,var(--slide-accent),var(--slide-accent2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.slide .metric-label { font-size: 13px; color: var(--slide-dim); margin-bottom: 16px; }
+.slide .quote { border-left: 3px solid var(--slide-accent2); padding-left: 18px; font-style: italic; font-size: 16px; line-height: 1.6; color: var(--slide-text); margin: 10px 0; }
+.slide .quote-attr { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-style: normal; }
+.cursor-blink { display: inline-block; width: 2px; height: 1em; background: var(--slide-accent); margin-left: 2px; animation: blink .7s infinite; vertical-align: text-bottom; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Empty state */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center; padding: 40px; }
+.empty-state .icon { font-size: 44px; margin-bottom: 14px; opacity: .4; }
+.empty-state p { font-size: 14px; line-height: 1.6; max-width: 380px; }
+.kbd { display:inline-block; background:var(--bg-deep); border:1px solid var(--border); border-radius:4px; padding:1px 5px; font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--text-muted); }
+
+/* Nav dots */
+.slide-nav { display:flex; justify-content:center; gap:6px; padding:12px; background:var(--bg-card); border-top:1px solid var(--border); }
+.nav-dot { width:7px; height:7px; border-radius:50%; background:var(--text-muted); border:none; cursor:pointer; transition:all .2s; padding:0; }
+.nav-dot.active { background:var(--accent-blue); transform:scale(1.3); }
+.nav-dot:hover { background:var(--accent-blue); }
+
+/* Fullscreen */
+.fullscreen .panel-left { display:none; }
+.fullscreen .slide-toolbar { display:none; }
+.fullscreen .slide-strip { display:none; }
+.fullscreen .slide-nav { position:fixed; bottom:0; left:0; right:0; z-index:100; background:rgba(6,9,15,.9); }
+.fullscreen .slide-canvas { padding:20px; }
+.fullscreen .slide { max-width:1200px; border-radius:0; border:none; }
+.exit-fs { position:fixed; top:14px; right:14px; z-index:200; background:rgba(0,0,0,.7); color:var(--text-dim); border:1px solid var(--border); padding:6px 14px; border-radius:7px; font-size:12px; cursor:pointer; font-family:inherit; display:none; }
+.fullscreen .exit-fs { display:block; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+<!-- ===== LEFT: CHAT PANEL ===== -->
+<div class="panel-left">
+  <div class="panel-header">
+    <h1>⚡ <span class="gradient">Live PPT</span></h1>
+    <div class="header-actions">
+      <button class="ha-btn" onclick="toggleWikiPicker()">📚 选择知识</button>
+      <button class="ha-btn" onclick="resetAll()">🗑 重置</button>
+    </div>
+  </div>
+
+  <!-- Wiki Picker -->
+  <div class="wiki-picker" id="wikiPicker">
+    <div class="wiki-picker-label">
+      选择 Wiki 文章作为 PPT 内容来源
+      <span onclick="toggleAllWiki()">全选/全不选</span>
+    </div>
+
+    <div class="wiki-group">
+      <div class="wiki-group-title">📄 Sources</div>
+      <label class="wiki-item" data-id="claude-code-leak"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">📄</span><span class="wi-title">Claude Code源码泄露事件 — 512K行源码泄露及舆情分析</span></label>
+      <label class="wiki-item" data-id="rag-tech"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">📄</span><span class="wi-title">RAG 技术详解 — 检索增强生成的全面解析</span></label>
+      <label class="wiki-item" data-id="llm-wiki"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">📄</span><span class="wi-title">LLM Wiki — 持久化知识库构建模式</span></label>
+      <label class="wiki-item" data-id="security-incident"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">📄</span><span class="wi-title">安全事件简报 — 华为云外包账号越权访问</span></label>
+      <label class="wiki-item" data-id="gnn-thesis"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">📄</span><span class="wi-title">基于图神经网络的多行为推荐系统模型研究</span></label>
+      <label class="wiki-item" data-id="group-fusion"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">📄</span><span class="wi-title">个人服务定制需求的群组融合方法研究</span></label>
+      <label class="wiki-item" data-id="ront-ronp"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">📄</span><span class="wi-title">RonT与RonP型室性早搏诱发室速 — 罕见病例</span></label>
+      <label class="wiki-item" data-id="micra"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">📄</span><span class="wi-title">Micra无导线起搏器植入 — 首例记录</span></label>
+      <label class="wiki-item" data-id="hongkong"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">📄</span><span class="wi-title">香港TOP商场街景 — 旺角都市生活</span></label>
+    </div>
+
+    <div class="wiki-group">
+      <div class="wiki-group-title">🏢 Entities</div>
+      <label class="wiki-item" data-id="entity-anthropic"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">🏢</span><span class="wi-title">Anthropic — AI安全公司, Claude系列模型</span></label>
+      <label class="wiki-item" data-id="entity-claude-code"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">🏢</span><span class="wi-title">Claude Code — AI编程代理工具, ARR 25亿美元</span></label>
+      <label class="wiki-item" data-id="entity-huaweicloud"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">🏢</span><span class="wi-title">华为云 — 云计算服务平台</span></label>
+    </div>
+
+    <div class="wiki-group">
+      <div class="wiki-group-title">💡 Concepts</div>
+      <label class="wiki-item" data-id="concept-rag"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">💡</span><span class="wi-title">RAG — 检索增强生成</span></label>
+      <label class="wiki-item" data-id="concept-kb"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">💡</span><span class="wi-title">Knowledge Base — 结构化知识集合</span></label>
+      <label class="wiki-item" data-id="concept-supply-chain"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">💡</span><span class="wi-title">Supply Chain Security — 软件供应链安全</span></label>
+      <label class="wiki-item" data-id="concept-audit"><input type="checkbox" onchange="onWikiSelect(this)"><span class="wi-icon">💡</span><span class="wi-title">安全审计 — 系统安全检查评估</span></label>
+    </div>
+
+    <div class="selected-count" id="selectedCount">已选择 0 篇文章</div>
+  </div>
+
+  <!-- Chat Messages -->
+  <div class="chat-area" id="chatArea">
+    <div class="msg system">欢迎使用 Live PPT — 基于你的知识库生成演示文稿</div>
+    <div class="msg ai">
+      👋 你好！我可以帮你基于 Wiki 知识库生成 PPT。<br><br>
+      <strong>使用方法：</strong><br>
+      1️⃣ 点击上方「📚 选择知识」选择 Wiki 文章<br>
+      2️⃣ 用自然语言告诉我要做什么样的 PPT<br><br>
+      <strong>你可以随时说：</strong><br>
+      • "停" / "打断" — 停止当前生成<br>
+      • "第3页加一个数据图表" — 修改某一页<br>
+      • "整体换成苹果风格" — 改全局样式<br>
+      • 上传 .pptx 文件 — 我会提取其设计风格<br><br>
+      <strong>试试：</strong>"帮我用 Claude Code 泄露事件和 RAG 技术的文章做一个安全分析PPT"
+    </div>
+  </div>
+
+  <!-- Chat Input -->
+  <div style="padding: 0 16px;" id="uploadInfo"></div>
+  <div class="chat-input-area">
+    <button class="chat-upload-btn" onclick="triggerUpload()" title="上传 PPT 样式文件">📎</button>
+    <textarea class="chat-input" id="chatInput" placeholder="输入指令... 例如「用这些文章做一个10页的技术分析PPT」" rows="1" onkeydown="onInputKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="chat-send" id="chatSend" onclick="sendMessage()">↑</button>
+    <input type="file" id="fileInput" accept=".pptx,.ppt,.pdf,.json,.css" style="display:none" onchange="onFileSelected(event)">
+  </div>
+</div>
+
+<!-- ===== RIGHT: SLIDE PANEL ===== -->
+<div class="panel-right">
+  <div class="slide-toolbar">
+    <div class="slide-counter" id="slideCounter">等待指令...</div>
+    <div class="toolbar-btns">
+      <button class="tb btn-stop" id="btnStop" onclick="stopGeneration()">■ 停止生成</button>
+      <button class="tb" onclick="prevSlide()">←</button>
+      <button class="tb" onclick="nextSlide()">→</button>
+      <button class="tb" onclick="toggleFullscreen()">⛶ 全屏</button>
+    </div>
+  </div>
+
+  <div class="slide-strip" id="slideStrip"></div>
+
+  <div class="slide-canvas" id="slideCanvas">
+    <div class="empty-state" id="emptyState">
+      <div class="icon">📑</div>
+      <p>选择 Wiki 文章，然后告诉我你想要什么样的 PPT<br><br>
+      <span style="font-size:12px">导航: <span class="kbd">←</span> <span class="kbd">→</span> 翻页 · <span class="kbd">F</span> 全屏 · <span class="kbd">Esc</span> 退出</span></p>
+    </div>
+  </div>
+
+  <div class="slide-nav" id="slideNav"></div>
+</div>
+
+<button class="exit-fs" onclick="toggleFullscreen()">✕ 退出全屏</button>
+</div>
+
+<script>
+// ========== STATE ==========
+let slides = [];
+let currentSlide = 0;
+let generating = false;
+let abortFlag = false;
+let selectedWiki = new Set();
+let uploadedFile = null;
+let currentTheme = 'dark'; // dark | light | apple | warm
+
+// ========== WIKI CONTENT DATABASE (from real wiki) ==========
+const wikiDB = {
+  'claude-code-leak': {
+    title: 'Claude Code源码泄露事件',
+    claims: [
+      '2026年3月31日，512K行Claude Code完整源码经Source Map泄露',
+      '发现者为区块链安全研究员Chaofan Shou (Solayer Labs / Fuzzland)',
+      'Anthropic ARR 190亿美元，Claude Code贡献25亿',
+      '内部代号: Capybara(Sonnet), Fennec(Opus), Tengu(Code)',
+      '企业客户占比80%，实质是企业AI基础设施',
+      '2025年2月至2026年3月间发生3次泄露，呈系统性模式'
+    ],
+    entities: ['Anthropic', 'Claude Code', 'Chaofan Shou'],
+    concepts: ['Source Map', 'Supply Chain Security', 'Feature Flags']
+  },
+  'rag-tech': {
+    title: 'RAG 技术详解',
+    claims: [
+      'RAG将信息检索与LLM结合，提升准确性、时效性和可解释性',
+      '三阶段架构: 索引(离线) → 检索(在线) → 生成',
+      '索引阶段：文档切分 → Embedding向量化 → 向量数据库存储',
+      '检索阶段：查询理解 → 相似度搜索Top-K → Cross-Encoder重排序',
+      'RAG vs 微调: RAG成本低、可实时更新、幻觉风险较低',
+      '主要挑战: 检索质量、上下文窗口限制、多跳推理'
+    ],
+    entities: ['LangChain', 'LlamaIndex'],
+    concepts: ['RAG', 'Knowledge Base']
+  },
+  'llm-wiki': {
+    title: 'LLM Wiki 知识库模式',
+    claims: [
+      '与RAG不同，LLM Wiki让模型增量构建和维护持久化维基',
+      '三层架构: Source Layer → Wiki Layer → Graph Layer',
+      '知识被编译一次并持续更新，而非每次重新检索',
+      '自动维护交叉引用，随时间标记矛盾',
+      '综合内容随每个新源的加入而演化',
+      'Obsidian兼容的结构化Markdown存储'
+    ],
+    entities: ['Obsidian', 'NotebookLM'],
+    concepts: ['Knowledge Base', 'Memex']
+  },
+  'security-incident': {
+    title: '华为云安全事件简报',
+    claims: [
+      '2026年3月18日华为云外包账号越权访问事件',
+      '涉及堡垒机、IAM用户管理等安全组件',
+      '暴露了最小权限原则执行不到位的问题',
+      '需加强变更管理和数据分类分级'
+    ],
+    entities: ['华为云'],
+    concepts: ['安全审计', '最小权限原则', '堡垒机']
+  }
+};
+
+// ========== THEME PRESETS ==========
+const themes = {
+  dark: {
+    '--slide-bg': '#0f1318', '--slide-text': '#e6edf3', '--slide-dim': '#7d8590',
+    '--slide-accent': '#58a6ff', '--slide-accent2': '#bc8cff',
+    '--slide-border': '#1b2230', '--slide-card-bg': 'rgba(255,255,255,0.03)',
+    '--slide-font': "'Space Grotesk','Noto Sans SC',sans-serif", '--slide-radius': '16px'
+  },
+  light: {
+    '--slide-bg': '#ffffff', '--slide-text': '#1d1d1f', '--slide-dim': '#6e6e73',
+    '--slide-accent': '#0071e3', '--slide-accent2': '#bf4800',
+    '--slide-border': '#d2d2d7', '--slide-card-bg': 'rgba(0,0,0,0.03)',
+    '--slide-font': "'Space Grotesk','Noto Sans SC',sans-serif", '--slide-radius': '16px'
+  },
+  apple: {
+    '--slide-bg': '#000000', '--slide-text': '#f5f5f7', '--slide-dim': '#86868b',
+    '--slide-accent': '#2997ff', '--slide-accent2': '#bf5af2',
+    '--slide-border': '#1d1d1f', '--slide-card-bg': 'rgba(255,255,255,0.05)',
+    '--slide-font': "-apple-system,BlinkMacSystemFont,'Noto Sans SC',sans-serif", '--slide-radius': '0px'
+  },
+  warm: {
+    '--slide-bg': '#1a1410', '--slide-text': '#f0e6d3', '--slide-dim': '#a89a86',
+    '--slide-accent': '#e8a838', '--slide-accent2': '#e06040',
+    '--slide-border': '#2a2018', '--slide-card-bg': 'rgba(255,220,160,0.04)',
+    '--slide-font': "Georgia,'Noto Sans SC',serif", '--slide-radius': '12px'
+  },
+  minimal: {
+    '--slide-bg': '#fafafa', '--slide-text': '#222222', '--slide-dim': '#888888',
+    '--slide-accent': '#333333', '--slide-accent2': '#666666',
+    '--slide-border': '#e0e0e0', '--slide-card-bg': 'rgba(0,0,0,0.02)',
+    '--slide-font': "'Space Grotesk','Noto Sans SC',sans-serif", '--slide-radius': '4px'
+  }
+};
+
+function applyTheme(name) {
+  const t = themes[name];
+  if (!t) return;
+  currentTheme = name;
+  const root = document.documentElement;
+  for (const [k,v] of Object.entries(t)) root.style.setProperty(k, v);
+}
+
+// ========== WIKI PICKER ==========
+function toggleWikiPicker() {
+  document.getElementById('wikiPicker').classList.toggle('open');
+}
+
+function onWikiSelect(cb) {
+  const item = cb.closest('.wiki-item');
+  const id = item.dataset.id;
+  if (cb.checked) { selectedWiki.add(id); item.classList.add('selected'); }
+  else { selectedWiki.delete(id); item.classList.remove('selected'); }
+  document.getElementById('selectedCount').textContent = `已选择 ${selectedWiki.size} 篇文章`;
+}
+
+function toggleAllWiki() {
+  const items = document.querySelectorAll('.wiki-item input[type=checkbox]');
+  const allChecked = [...items].every(i => i.checked);
+  items.forEach(i => { i.checked = !allChecked; onWikiSelect(i); });
+}
+
+// ========== CHAT ==========
+function addMsg(role, html) {
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = html;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+  return div;
+}
+
+function showTyping() {
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = 'typing-indicator';
+  div.id = 'typingDots';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+function hideTyping() { document.getElementById('typingDots')?.remove(); }
+
+function onInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ========== FILE UPLOAD ==========
+function triggerUpload() { document.getElementById('fileInput').click(); }
+function onFileSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  uploadedFile = file;
+  const info = document.getElementById('uploadInfo');
+  info.innerHTML = `<div class="upload-file-info">📎 ${file.name} (${(file.size/1024).toFixed(1)}KB) <span class="remove-file" onclick="removeUpload()">✕</span></div>`;
+}
+function removeUpload() {
+  uploadedFile = null;
+  document.getElementById('uploadInfo').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+}
+
+// ========== INTENT DETECTION ==========
+function detectIntent(text) {
+  const t = text.toLowerCase();
+  // Stop
+  if (/^(停|stop|打断|暂停|算了|取消)/.test(t)) return { type: 'stop' };
+  // Style change
+  if (/苹果|apple/.test(t) && /风格|样式|主题|style/.test(t)) return { type: 'style', theme: 'apple' };
+  if (/亮色|白色|light|白底/.test(t) && /风格|样式|主题|style|换|改/.test(t)) return { type: 'style', theme: 'light' };
+  if (/暗色|深色|dark|黑/.test(t) && /风格|样式|主题|style|换|改/.test(t)) return { type: 'style', theme: 'dark' };
+  if (/暖色|warm|复古/.test(t)) return { type: 'style', theme: 'warm' };
+  if (/极简|minimal|简洁/.test(t)) return { type: 'style', theme: 'minimal' };
+  if (/风格|样式|主题|style|外观/.test(t) && /改|换|变|调/.test(t)) return { type: 'style', theme: 'auto' };
+  // Edit specific slide
+  const pageMatch = t.match(/第\s*(\d+)\s*页/);
+  if (pageMatch) return { type: 'edit', page: parseInt(pageMatch[1]), instruction: text };
+  // Generate
+  if (/做|生成|创建|制作|帮我|来一个|ppt|演示|幻灯片|汇报|报告/.test(t)) return { type: 'generate', instruction: text };
+  // Default: treat as chat / generate
+  return { type: 'generate', instruction: text };
+}
+
+// ========== SEND MESSAGE ==========
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Show user message
+  let userHtml = text;
+  if (uploadedFile) userHtml += `<br><span style="font-size:11px;color:var(--accent-yellow)">📎 ${uploadedFile.name}</span>`;
+  addMsg('user', userHtml);
+
+  const intent = detectIntent(text);
+
+  switch (intent.type) {
+    case 'stop':
+      handleStop();
+      break;
+    case 'style':
+      await handleStyleChange(intent, text);
+      break;
+    case 'edit':
+      await handleEditSlide(intent);
+      break;
+    case 'generate':
+      await handleGenerate(intent);
+      break;
+  }
+
+  if (uploadedFile) {
+    // Process the upload context
+    removeUpload();
+  }
+}
+
+// ========== STOP ==========
+function handleStop() {
+  if (generating) {
+    abortFlag = true;
+    addMsg('ai', '<span class="action-tag tag-gen">已停止</span>生成已中断。你可以继续修改已生成的页面，或重新生成。');
+  } else {
+    addMsg('ai', '当前没有正在生成的任务。');
+  }
+}
+
+function stopGeneration() { abortFlag = true; }
+
+// ========== STYLE CHANGE ==========
+async function handleStyleChange(intent, text) {
+  showTyping();
+  await sleep(600);
+  hideTyping();
+
+  let theme = intent.theme;
+  if (theme === 'auto') {
+    // Try to infer from text
+    if (/苹果|apple/i.test(text)) theme = 'apple';
+    else if (/暖|warm/i.test(text)) theme = 'warm';
+    else if (/极简|minimal/i.test(text)) theme = 'minimal';
+    else if (/亮|白|light/i.test(text)) theme = 'light';
+    else theme = 'dark';
+  }
+
+  const nameMap = { dark: '深色科技', light: '亮色清新', apple: '苹果极简', warm: '暖色复古', minimal: '极简黑白' };
+  applyTheme(theme);
+
+  addMsg('ai', `<span class="action-tag tag-style">样式</span>已切换为「<strong>${nameMap[theme] || theme}</strong>」风格。所有幻灯片已实时更新。<br><br>可用风格：深色科技 · 亮色清新 · 苹果极简 · 暖色复古 · 极简黑白`);
+
+  // Re-render current slide
+  if (slides.length > 0) showSlide(currentSlide);
+}
+
+// ========== EDIT SLIDE ==========
+async function handleEditSlide(intent) {
+  const pageIdx = intent.page - 1;
+  if (pageIdx < 0 || pageIdx >= slides.length) {
+    addMsg('ai', `<span class="action-tag tag-edit">编辑</span>第 ${intent.page} 页不存在。当前共 ${slides.length} 页。`);
+    return;
+  }
+
+  showTyping();
+  await sleep(800);
+  hideTyping();
+
+  const slide = slides[pageIdx];
+  const instruction = intent.instruction;
+
+  // Simulate intelligent edit based on instruction
+  if (/标题|title/i.test(instruction) && /改|换|变/.test(instruction)) {
+    slide.title = slide.title.replace(/<[^>]*>/g, '').slice(0, 20) + '（已修改）';
+    addMsg('ai', `<span class="action-tag tag-edit">编辑</span>已修改第 ${intent.page} 页的标题。`);
+  } else if (/删|remove|去掉/.test(instruction)) {
+    slides.splice(pageIdx, 1);
+    rebuildStrip();
+    if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+    showSlide(currentSlide);
+    addMsg('ai', `<span class="action-tag tag-edit">编辑</span>已删除第 ${intent.page} 页。现在共 ${slides.length} 页。`);
+    return;
+  } else if (/加|添加|增加|insert|add/.test(instruction) && /数据|图表|chart|metric|数字/.test(instruction)) {
+    // Transform to metric type
+    slide.type = 'metric';
+    slide.number = String(Math.floor(Math.random() * 900) + 100);
+    slide.label = '基于 Wiki 知识库数据统计';
+    slide.items = slide.items || ['数据已更新', '图表已添加', '来源已标注'];
+    addMsg('ai', `<span class="action-tag tag-edit">编辑</span>已将第 ${intent.page} 页转换为数据图表页。`);
+  } else if (/对比|comparison|vs/.test(instruction)) {
+    slide.type = 'comparison';
+    slide.title = slide.title || '对比分析';
+    slide.left = { label: '方案 A', desc: '根据 Wiki 知识库：优势在于结构化存储和持久积累。' };
+    slide.right = { label: '方案 B', desc: '根据 Wiki 知识库：优势在于实时检索和灵活更新。' };
+    addMsg('ai', `<span class="action-tag tag-edit">编辑</span>已将第 ${intent.page} 页转换为对比分析页。`);
+  } else {
+    // Generic edit: add a note
+    if (slide.items) {
+      slide.items.push(`<strong>[新增]</strong> ${instruction.replace(/第\d+页/, '').trim()}`);
+    }
+    addMsg('ai', `<span class="action-tag tag-edit">编辑</span>已更新第 ${intent.page} 页内容。`);
+  }
+
+  showSlide(pageIdx);
+  updateThumb(pageIdx);
+}
+
+// ========== GENERATE ==========
+async function handleGenerate(intent) {
+  if (generating) {
+    addMsg('ai', '正在生成中... 说「停」可以打断当前生成。');
+    return;
+  }
+
+  // Check wiki selection
+  const wikiSources = [...selectedWiki];
+  if (wikiSources.length === 0) {
+    addMsg('ai', '<span class="action-tag tag-wiki">提示</span>请先点击「📚 选择知识」选择要使用的 Wiki 文章，然后再告诉我你想要什么样的 PPT。');
+    return;
+  }
+
+  generating = true;
+  abortFlag = false;
+  document.getElementById('btnStop').classList.add('visible');
+
+  // Upload file context
+  let uploadContext = '';
+  if (uploadedFile) {
+    uploadContext = `\n已接收样式文件: ${uploadedFile.name}`;
+    addMsg('ai', `<span class="action-tag tag-upload">文件</span>已接收「${uploadedFile.name}」，将提取其设计风格应用到生成的 PPT 中。`);
+    await sleep(400);
+  }
+
+  // Phase 1: Wiki retrieval
+  showTyping();
+  await sleep(500);
+  hideTyping();
+
+  const sourceNames = wikiSources.map(id => {
+    const item = document.querySelector(`.wiki-item[data-id="${id}"] .wi-title`);
+    return item ? item.textContent.split('—')[0].trim() : id;
+  });
+  addMsg('ai', `<span class="action-tag tag-wiki">检索</span>正在读取 ${wikiSources.length} 篇 Wiki 文章...<br>` +
+    sourceNames.map(n => `　📖 ${n}`).join('<br>'));
+
+  await sleep(600);
+  if (abortFlag) { finishGeneration(); return; }
+
+  // Phase 2: Planning
+  showTyping();
+  await sleep(700);
+  hideTyping();
+
+  // Build slides from wiki content
+  const deckSlides = buildSlidesFromWiki(wikiSources, intent.instruction);
+  addMsg('ai', `<span class="action-tag tag-gen">规划</span>基于知识库内容，规划了 <strong>${deckSlides.length} 页</strong>幻灯片。开始实时生成...`);
+
+  await sleep(300);
+
+  // Phase 3: Generate slides one by one
+  slides = [];
+  currentSlide = 0;
+  document.getElementById('slideStrip').innerHTML = '';
+  document.getElementById('emptyState')?.remove();
+
+  let slideEl = document.querySelector('.slide-canvas .slide');
+  if (!slideEl) {
+    slideEl = document.createElement('div');
+    slideEl.className = 'slide';
+    document.getElementById('slideCanvas').appendChild(slideEl);
+  }
+
+  for (let i = 0; i < deckSlides.length; i++) {
+    if (abortFlag) {
+      addMsg('ai', `<span class="action-tag tag-gen">已停止</span>生成在第 ${i}/${deckSlides.length} 页时被打断。已生成的 ${slides.length} 页保留。`);
+      break;
+    }
+
+    slides.push(deckSlides[i]);
+    addThumb(i, deckSlides[i]);
+    await typewriterSlide(slideEl, deckSlides[i], i);
+    await sleep(200);
+  }
+
+  if (!abortFlag) {
+    addMsg('ai', `<span class="action-tag tag-gen">完成</span>✓ ${slides.length} 页演示文稿已生成！<br><br>你可以继续说：<br>• "第N页改成..." — 修改某一页<br>• "换成苹果风格" — 改整体样式<br>• "加一页总结" — 追加内容`);
+  }
+
+  finishGeneration();
+}
+
+function finishGeneration() {
+  generating = false;
+  abortFlag = false;
+  document.getElementById('btnStop').classList.remove('visible');
+}
+
+// ========== BUILD SLIDES FROM WIKI ==========
+function buildSlidesFromWiki(wikiIds, instruction) {
+  const result = [];
+  const allClaims = [];
+  const allEntities = new Set();
+  const allConcepts = new Set();
+  const sourceTitles = [];
+
+  wikiIds.forEach(id => {
+    const entry = wikiDB[id];
+    if (entry) {
+      allClaims.push(...(entry.claims || []));
+      (entry.entities || []).forEach(e => allEntities.add(e));
+      (entry.concepts || []).forEach(c => allConcepts.add(c));
+      sourceTitles.push(entry.title);
+    }
+  });
+
+  const topicStr = sourceTitles.join(' · ');
+
+  // Title slide
+  result.push({
+    type: 'title',
+    badge: 'KNOWLEDGE PIPELINE',
+    title: `<span class="gradient">${sourceTitles[0] || '知识分析报告'}</span>`,
+    subtitle: `基于 ${wikiIds.length} 篇 Wiki 文章 · ${allClaims.length} 条知识声明 · ${allEntities.size} 个实体`,
+    source: `wiki/ — ${sourceTitles.join(' · ')}`
+  });
+
+  // Overview / agenda
+  result.push({
+    type: 'bullets',
+    badge: '内容概览',
+    title: '本次分析涵盖的知识领域',
+    items: sourceTitles.map(t => `<strong>${t}</strong>`),
+    source: 'wiki/index.md'
+  });
+
+  // Group claims by source and generate slides
+  wikiIds.forEach(id => {
+    const entry = wikiDB[id];
+    if (!entry) return;
+
+    // Main claims slide
+    result.push({
+      type: 'bullets',
+      badge: entry.title.slice(0, 20),
+      title: entry.title,
+      items: entry.claims.slice(0, 5),
+      source: `wiki/sources/${id}.md`
+    });
+
+    // If has entities, add an entity highlight
+    if (entry.entities && entry.entities.length >= 2) {
+      result.push({
+        type: 'comparison',
+        badge: '关键实体',
+        title: `${entry.title} — 核心角色`,
+        left: { label: entry.entities[0], desc: `在本事件/研究中扮演关键角色。来源: wiki/entities/${entry.entities[0]}.md` },
+        right: { label: entry.entities[1] || entry.entities[0], desc: `相关实体。在知识图谱中与多个概念节点存在关联。` },
+        source: 'wiki/entities/'
+      });
+    }
+  });
+
+  // Cross-source synthesis if multiple sources
+  if (wikiIds.length >= 2) {
+    result.push({
+      type: 'metric',
+      badge: '跨源统计',
+      number: String(allClaims.length),
+      label: '条知识声明来自 ' + wikiIds.length + ' 个独立源',
+      items: [
+        `${allEntities.size} 个涉及实体: ${[...allEntities].slice(0, 4).join('、')}`,
+        `${allConcepts.size} 个核心概念: ${[...allConcepts].slice(0, 4).join('、')}`,
+        `知识图谱关联密度: ${Math.floor(allClaims.length * 1.7)} 条边`,
+        '数据源经交叉验证，矛盾已标记'
+      ],
+      source: 'wiki/claims.json · wiki/overview.md'
+    });
+  }
+
+  // Quote slide
+  const quotePool = [
+    { text: '别再让 AI 帮你搜索了。让它帮你理解。', attr: '— Knowledge Pipeline' },
+    { text: 'ChatGPT 是你的对话工具，Knowledge Pipeline 是你的第二大脑。', attr: '— wiki/overview.md' },
+    { text: '快速迭代的代价不应该是安全的妥协。', attr: '— Claude Code 泄露事件分析' },
+    { text: '让模型在生成回答前先"查资料"，而不是仅依赖训练时的参数化知识。', attr: '— RAG 技术详解' }
+  ];
+  const quote = quotePool[Math.floor(Math.random() * quotePool.length)];
+  result.push({
+    type: 'quote',
+    badge: '核心洞察',
+    quote: quote.text,
+    attribution: quote.attr,
+    source: 'wiki/syntheses/'
+  });
+
+  // Thank you
+  result.push({
+    type: 'title',
+    badge: 'THANK YOU',
+    title: '<span class="gradient">Thanks</span>',
+    subtitle: `基于 Knowledge Pipeline Wiki 自动生成 · 引用 ${wikiIds.length} 个源 · ${allEntities.size} 实体 · ${allConcepts.size} 概念`,
+    source: `wiki/ — ${allClaims.length} claims`
+  });
+
+  return result;
+}
+
+// ========== SLIDE RENDERING ==========
+function renderSlideHTML(data) {
+  let h = `<span class="slide-badge">${data.badge || ''}</span>`;
+  switch (data.type) {
+    case 'title':
+      h += `<h2>${data.title}</h2><p>${data.subtitle || ''}</p>`; break;
+    case 'bullets':
+      h += `<h3>${data.title}</h3><ul>${(data.items||[]).map(i=>`<li>${i}</li>`).join('')}</ul>`; break;
+    case 'comparison':
+      h += `<h3>${data.title}</h3><div class="comparison"><div class="comp-card left"><h4>${data.left.label}</h4><p>${data.left.desc}</p></div><div class="comp-card right"><h4>${data.right.label}</h4><p>${data.right.desc}</p></div></div>`; break;
+    case 'metric':
+      h += `<div class="big-number">${data.number}</div><div class="metric-label">${data.label}</div><ul>${(data.items||[]).map(i=>`<li>${i}</li>`).join('')}</ul>`; break;
+    case 'quote':
+      h += `<div class="quote">${data.quote}</div><div class="quote-attr">${data.attribution||''}</div>`; break;
+  }
+  h += `<span class="slide-source"><span class="wiki-tag">WIKI</span>${data.source||''}</span>`;
+  return h;
+}
+
+function showSlide(idx) {
+  if (idx < 0 || idx >= slides.length) return;
+  currentSlide = idx;
+  const el = document.querySelector('.slide-canvas .slide');
+  if (!el) return;
+  el.innerHTML = renderSlideHTML(slides[idx]) + `<span class="slide-num">${idx+1} / ${slides.length}</span>`;
+  el.className = 'slide entering';
+  updateNav();
+  updateStripActive();
+  document.getElementById('slideCounter').textContent = `Slide ${idx+1} / ${slides.length}`;
+}
+
+function updateNav() {
+  document.getElementById('slideNav').innerHTML = slides.map((_,i) =>
+    `<button class="nav-dot${i===currentSlide?' active':''}" onclick="showSlide(${i})"></button>`
+  ).join('');
+}
+
+function prevSlide() { showSlide(currentSlide - 1); }
+function nextSlide() { showSlide(currentSlide + 1); }
+
+// ========== THUMBNAIL STRIP ==========
+function addThumb(idx, data) {
+  const strip = document.getElementById('slideStrip');
+  const div = document.createElement('div');
+  div.className = 'thumb generating';
+  div.id = `thumb-${idx}`;
+  div.onclick = () => showSlide(idx);
+  const short = (data.badge || data.type || '').slice(0, 12);
+  div.innerHTML = `<span class="thumb-num">${idx+1}</span>${short}`;
+  strip.appendChild(div);
+  strip.scrollLeft = strip.scrollWidth;
+}
+
+function updateThumb(idx) {
+  const t = document.getElementById(`thumb-${idx}`);
+  if (t) {
+    t.classList.remove('generating');
+    const short = (slides[idx].badge || slides[idx].type || '').slice(0, 12);
+    t.innerHTML = `<span class="thumb-num">${idx+1}</span>${short}`;
+  }
+}
+
+function updateStripActive() {
+  document.querySelectorAll('.thumb').forEach((t,i) => t.classList.toggle('active', i === currentSlide));
+}
+
+function rebuildStrip() {
+  document.getElementById('slideStrip').innerHTML = '';
+  slides.forEach((s,i) => {
+    addThumb(i, s);
+    updateThumb(i);
+  });
+}
+
+// ========== TYPEWRITER GENERATION ==========
+async function typewriterSlide(el, data, index) {
+  el.innerHTML = '';
+  el.className = 'slide entering';
+  el.innerHTML = `<span class="slide-badge">${data.badge || ''}</span>`;
+
+  switch (data.type) {
+    case 'title': {
+      const h2 = document.createElement('h2'); el.appendChild(h2);
+      await typeText(h2, data.title, 20);
+      if (abortFlag) return;
+      const p = document.createElement('p'); el.appendChild(p);
+      await typeText(p, data.subtitle || '', 12);
+      break;
+    }
+    case 'bullets': {
+      const h3 = document.createElement('h3'); el.appendChild(h3);
+      await typeText(h3, data.title, 18);
+      if (abortFlag) return;
+      const ul = document.createElement('ul'); el.appendChild(ul);
+      for (const item of data.items) {
+        if (abortFlag) return;
+        const li = document.createElement('li'); ul.appendChild(li);
+        await typeText(li, item, 6);
+        await sleep(60);
+      }
+      break;
+    }
+    case 'comparison': {
+      const h3 = document.createElement('h3'); el.appendChild(h3);
+      await typeText(h3, data.title, 18);
+      if (abortFlag) return;
+      const div = document.createElement('div');
+      div.className = 'comparison';
+      div.innerHTML = `<div class="comp-card left"><h4>${data.left.label}</h4><p>${data.left.desc}</p></div><div class="comp-card right"><h4>${data.right.label}</h4><p>${data.right.desc}</p></div>`;
+      div.style.opacity = '0'; el.appendChild(div);
+      await sleep(150);
+      div.style.transition = 'opacity .5s'; div.style.opacity = '1';
+      await sleep(500);
+      break;
+    }
+    case 'metric': {
+      const bn = document.createElement('div'); bn.className = 'big-number'; el.appendChild(bn);
+      await animateNum(bn, data.number, 600);
+      if (abortFlag) return;
+      const ml = document.createElement('div'); ml.className = 'metric-label'; el.appendChild(ml);
+      await typeText(ml, data.label, 12);
+      if (abortFlag) return;
+      const ul = document.createElement('ul'); el.appendChild(ul);
+      for (const item of (data.items||[])) {
+        if (abortFlag) return;
+        const li = document.createElement('li'); ul.appendChild(li);
+        await typeText(li, item, 6);
+        await sleep(50);
+      }
+      break;
+    }
+    case 'quote': {
+      const q = document.createElement('div'); q.className = 'quote'; el.appendChild(q);
+      await typeText(q, data.quote, 15);
+      if (abortFlag) return;
+      const attr = document.createElement('div'); attr.className = 'quote-attr'; el.appendChild(attr);
+      await typeText(attr, data.attribution || '', 18);
+      break;
+    }
+  }
+
+  el.insertAdjacentHTML('beforeend',
+    `<span class="slide-source"><span class="wiki-tag">WIKI</span>${data.source||''}</span><span class="slide-num">${index+1} / ${slides.length}</span>`);
+  updateNav();
+  updateStripActive();
+  updateThumb(index);
+  document.getElementById('slideCounter').textContent = `Slide ${index+1} / ${slides.length}`;
+}
+
+async function typeText(el, html, speed) {
+  const tmp = document.createElement('div'); tmp.innerHTML = html;
+  const plain = tmp.textContent;
+  if (html !== plain) { el.innerHTML = ''; await sleep(80); el.innerHTML = html; await sleep(Math.min(plain.length * speed, 350)); return; }
+  let out = '';
+  for (let i = 0; i < plain.length; i++) {
+    if (abortFlag) { el.innerHTML = plain; return; }
+    out += plain[i];
+    el.innerHTML = out + '<span class="cursor-blink"></span>';
+    await sleep(speed);
+  }
+  el.innerHTML = out;
+}
+
+async function animateNum(el, target, dur) {
+  const num = parseInt(target.replace(/[^0-9]/g, ''));
+  const steps = 20; const step = dur / steps;
+  for (let i = 1; i <= steps; i++) {
+    if (abortFlag) { el.textContent = target; return; }
+    el.textContent = Math.floor(num / steps * i).toLocaleString();
+    await sleep(step);
+  }
+  el.textContent = target;
+}
+
+// ========== RESET ==========
+function resetAll() {
+  slides = []; currentSlide = 0; generating = false; abortFlag = false;
+  document.getElementById('slideStrip').innerHTML = '';
+  document.getElementById('slideNav').innerHTML = '';
+  document.getElementById('slideCounter').textContent = '等待指令...';
+  const canvas = document.getElementById('slideCanvas');
+  const sl = canvas.querySelector('.slide'); if (sl) sl.remove();
+  canvas.innerHTML = '<div class="empty-state" id="emptyState"><div class="icon">📑</div><p>选择 Wiki 文章，然后告诉我你想要什么样的 PPT</p></div>';
+  addMsg('system', '已重置。选择知识文章后开始新的生成。');
+}
+
+// ========== KEYBOARD ==========
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowLeft') prevSlide();
+  if (e.key === 'ArrowRight') nextSlide();
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+  if (e.key === 'Escape' && document.getElementById('app').classList.contains('fullscreen')) toggleFullscreen();
+});
+
+function toggleFullscreen() { document.getElementById('app').classList.toggle('fullscreen'); }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>

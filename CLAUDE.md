@@ -17,7 +17,7 @@
 
 ### 配置提示
 
-当用户在没有配置的情况下运行 `/pipeline-ingest`、`/pipeline-query`、`/pipeline-graph`（任何依赖 LLM 的命令）时：
+当用户在没有配置的情况下运行 `/pipeline-ingest`、`/pipeline-query`、`/pipeline-graph`、`/pipeline-ppt`（任何依赖 LLM 的命令）时：
 
 1. **显示清晰的消息：**
    ```
@@ -87,12 +87,14 @@
 | `/pipeline-query` | `query: 主要主题是什么？` |
 | `/pipeline-lint` | `检查维基` |
 | `/pipeline-graph` | `构建知识图谱` |
+| `/pipeline-ppt` | `生成 Live PPT 演示文稿` |
 
 或者直接用自然语言描述你的需求：
 - *"摄入这个文件：raw/papers/attention-is-all-you-need.md"*
 - *"维基里关于 transformer 模型的内容是什么？"*
 - *"检查维基中的孤立页面和矛盾之处"*
 - *"构建图谱并告诉我与 RAG 相关的内容"*
+- *"帮我做一个安全分析的 PPT"*
 
 Claude Code 会自动读取此文件并按照下面的工作流执行。
 

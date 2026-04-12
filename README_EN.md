@@ -2,7 +2,7 @@
 
 # 🧠 Knowledge Pipeline
 
-**Stop asking AI to search for you. Make it understand for you.**
+**Your documents shouldn't just be "summarized". They should be compiled into a reasoning-ready knowledge system.**
 
 English | [中文](README.md)
 
@@ -10,114 +10,110 @@ English | [中文](README.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Skills](https://img.shields.io/badge/npx%20skills%20add-knowledge--pipline-00b894)](https://skills.sh)
 
-Throw any document at it — PDF, images, video, Word, Excel — it doesn't just "summarize", it **compiles into structured knowledge**, automatically discovers cross-document contradictions, tracks entity evolution, and builds an interactive knowledge graph.
+A Claude Code skill — throw PDF, images, Word, Excel, video at it, and it compiles them into a structured Markdown wiki + interactive knowledge graph.  
+Cross-document contradiction detection, knowledge fusion, deep reasoning chains — not just retrieval, but **reasoning**.
 
-[Quick Start](#-quick-start) · [Why Not Just Use ChatGPT](#-why-not-just-use-chatgpt) · [Core Capabilities](#-core-capabilities) · [Use Cases](#-use-cases) · [Examples](#-examples)
+[Quick Start](#-quick-start) · [Who Needs This](#-who-needs-this) · [Comparison](#-comparison) · [Core Capabilities](#-core-capabilities) · [Use Cases](#-use-cases)
 
 </div>
 
 ---
 
-## 💡 Why Not Just Use ChatGPT?
+## 🎯 Who Needs This?
 
-> "Can't I just toss my PDF into ChatGPT?"
+> If you face any of these scenarios, Knowledge Pipeline was designed for you.
 
-Sure. If you have one document and one question.
+### Scenario 1: The more documents you read, the more lost you get
 
-But when you have **50 documents** spanning **3 months**, involving **12 people** and **8 core concepts** — ChatGPT gives you a chat log. Knowledge Pipeline gives you a **living knowledge base**:
+You've read 30 papers, taken notes, highlighted key points — but three months later when you need to find "did Paper A and Paper B actually contradict each other on this?" you have to re-read them one by one. **ChatGPT and NotebookLM can't solve this — they're stateless, starting from scratch every session.**
 
-| | ChatGPT / Claude File Upload (RAG) | Knowledge Pipeline |
+→ Knowledge Pipeline auto-merges every ingest into an existing knowledge network. Knowledge accumulates, never lost. Contradiction detection fires in real time.
+
+### Scenario 2: Your questions span multiple documents and domains
+
+You want to know "what are the security strategy differences across these 5 audit reports?" or "what do clinical judgment patterns in medical literature have in common with engineering architecture decisions?" — answers are scattered across different documents, and no single document directly discusses your question.
+
+→ RAG can only retrieve and stitch text fragments. Knowledge Pipeline **reasons out answers** in the compiled concept network, even when no document directly covers the topic.
+
+### Scenario 3: You need a transparent, auditable knowledge middle layer
+
+You don't trust black-box vector databases — you need to see how knowledge is organized, browse every entity and concept page, and manually correct AI's judgments.
+
+→ All knowledge is stored as structured Markdown (Obsidian-compatible). Browsable, editable, version-controllable. No black boxes.
+
+### Scenario 4: You need local deployment + full control
+
+You don't want your data sent to Google's or OpenAI's servers. You need to choose your own LLM provider, or even use local Ollama.
+
+→ Runs entirely locally. Supports any OpenAI-compatible API (DeepSeek, Volcengine, Together AI, Ollama, etc.).
+
+---
+
+## ⚔️ Comparison
+
+### vs ChatGPT / Claude File Upload
+
+| | ChatGPT / Claude File Upload | Knowledge Pipeline |
 |---|---|---|
-| 📄 Read docs | Re-upload every session, no accumulation | **Ingest once, accumulate forever** |
-| 🔗 Cross-doc links | Only retrieves relevant fragments to stitch | **Auto-builds entity & concept networks** |
+| 📄 Knowledge accumulation | Re-upload every session, no accumulation | **Ingest once, accumulate forever** |
+| 🔗 Cross-doc linking | Only retrieves relevant fragments to stitch | **Auto-builds entity & concept networks** |
 | ⚠️ Contradiction detection | Won't proactively find contradictions | **Reports conflicts on ingest** |
-| 🔄 Knowledge fusion | Doesn't exist, independent retrieval each time | **New docs auto-merge into existing pages** |
+| 🔄 Knowledge fusion | Doesn't exist, independent each time | **New docs auto-merge into existing pages** |
 | 🧭 Multi-source perspectives | Only gives one synthesized answer | **Shows each source's stance + consensus & divergence** |
-| 📊 Visualization | None | **Interactive knowledge graph (vis.js)** |
-| 💾 Intermediate repr. | Black-box vectors, not browsable | **Structured Markdown wiki (Obsidian-compatible)** |
+| 💾 Intermediate repr. | Black box, not user-visible | **Markdown wiki, browsable & editable** |
 
-**In one sentence: ChatGPT is your chat tool. Knowledge Pipeline is your second brain.**
+### vs Google NotebookLM
 
-### 🎯 Real-World Case: Deep Pattern Mining
+| | NotebookLM | Knowledge Pipeline |
+|---|---|---|
+| 🌐 Where it runs | Google Cloud, data uploaded to Google | **Runs locally, data never leaves your machine** |
+| 🔧 LLM choice | Google Gemini only | **Any OpenAI-compatible API / local Ollama** |
+| ⚠️ Contradiction detection | None | **Proactive cross-source contradiction detection** |
+| 🔗 Knowledge fusion | None, sources stay independent | **Auto entity/concept merging** |
+| 📊 Knowledge graph | None | **Interactive vis.js graph + community detection** |
+| 🧠 Reasoning chains | None | **BFS deep reasoning chains + visualization** |
+| 📁 Exportability | Locked in Google ecosystem | **Pure Markdown files, Obsidian/Git compatible** |
+| 📦 Format support | PDF, text, web pages | **PDF/images/video/Word/Excel/PPT/HTML** |
 
-We ingested 18 real documents — medical case reports, CS master's theses, a source code leak incident, street photos, a concert video — spanning wildly different domains.
+### vs Traditional RAG (LangChain / LlamaIndex)
 
-Then asked a question that **no single document directly discusses**:
+| | Traditional RAG | Knowledge Pipeline |
+|---|---|---|
+| How it works | Chunk → vectorize → retrieve similar fragments | **Compile → structured knowledge network → reason** |
+| Answer basis | Text fragment similarity matching | **Relationship reasoning in concept network** |
+| Cross-doc capability | Weak — just throws more fragments into context | **Strong — entity/concept pages auto-merge across sources** |
+| Contradiction handling | Unaware, may give contradictory answers | **Proactively detects and reports** |
+| Intermediate repr. | Vector database (not readable) | **Markdown wiki (human-readable & editable)** |
+| Development cost | Need to write code to build pipeline | **5 slash commands, zero code** |
+| New doc adaptation | Need to re-index | **Incremental ingest, auto-fusion** |
 
-> **"Will AI really cause programmer unemployment in 2026?"**
+**In one sentence:**
+- **ChatGPT/Claude** = chat tool, starts from scratch every time
+- **NotebookLM** = document reader, single-project single-use, locked to Google
+- **Traditional RAG** = search engine, searches through fragments
+- **Knowledge Pipeline** = knowledge compiler, compiles documents into a reasoning-ready knowledge system
 
-**What RAG (ChatGPT/Claude file upload) does:**
-Retrieves text chunks most similar to "programmer unemployment" — but none of the 18 documents discuss this topic. RAG can't find relevant passages, so it falls back to the model's own knowledge for a generic answer.
+---
 
-**What Knowledge Pipeline does:**
+## 🎯 Core Value in 30 Seconds
 
 ```
-You: /pipeline-ingest D:\docs\raw
-AI:  ✅ Batch ingest complete
-     📝 18 sources → 23 entity pages + 36 concept pages
-     ⚠️ Found 3 cross-source contradictions
+You: Throw in 18 documents (papers + audit reports + news + photos + video)
+AI:  ✅ Compiled → 23 entity pages + 36 concept pages + 3 contradictions
 
-You: /pipeline-query "Will AI really cause programmer unemployment in 2026?"
+You: Ask a question NO document directly discusses —
+     "Will AI really cause programmer unemployment in 2026?"
+
+RAG approach: Search for "programmer unemployment" text chunks → nothing found → generic answer from model knowledge
+KP approach:  Reason through concept network →
+     • Thesis "algorithm coding" + Claude Code "$2.5B ARR" → AI is replacing coding work at scale
+     • Thesis "asymmetric similarity discovery" = creative insight → can't be automated
+     • Medical "clinical judgment" ≈ Engineering "architecture decisions" → contextual reasoning work won't disappear
+
+Result: Not "unemployment" but "layered elimination" — with citations, reasoning chains, and knowledge graph visualization
 ```
 
-It doesn't search text fragments — it discovers deep patterns in the **pre-compiled concept network and entity relationships**:
-
-```markdown
-## AI's Impact on Programmer Employment (Based on Wiki Knowledge Base)
-
-### Deep Pattern Discovery
-
-1. **The line between "automatable" and "not automatable"**
-   Two master's theses ([[group-fusion-method]] [[gnn-based-multi-behavior]])
-   core work is implementing algorithms: MBWGCN model, MaxQ/MaxS group fusion
-   algorithms, GNN training pipelines. The essence of this work is "translating
-   math formulas into code" — exactly what AI coding tools excel at.
-   
-   But in the same papers, **problem discovery and modeling** — like realizing
-   that "similarity between requirements is asymmetric" ([[AsymmetricSimilarity]]),
-   or modeling recommendation systems as multi-behavior graph structures —
-   this kind of creative insight cannot currently be automated.
-
-2. **AI coding tools are already big business**
-   The [[Claude Code]] source code leak revealed: this is a $2.5B ARR product
-   with unreleased features like KAIROS (daemon) and ULTRAPLAN (cloud planning).
-   AI coding tools aren't lab toys — they're already replacing development work
-   at scale.
-   
-   But the leak itself ([[SupplyChainSecurity]]) also proves: production
-   engineering judgment — "should we exclude source maps in .npmignore" —
-   this kind of context-aware decision-making is something AI itself still
-   gets wrong.
-
-3. **Cross-domain validation: Medicine vs Programming**
-   Medical case reports ([[RonT Syndrome]] [[PVC]]) show that a clinician's
-   judgment process — whether coupling intervals are fixed, whether lidocaine
-   is needed — depends entirely on experience and context.
-   This is isomorphic to "senior programmers judging system architecture":
-   **work requiring contextual reasoning won't disappear; work that only
-   requires execution will be replaced.**
-
-### Overall Verdict
-
-Not "unemployment" but "layered elimination":
-- ✅ Consensus: Algorithm implementation and data processing ("translational coding") will sharply decrease
-- ⚠️ Divergence: Problem modeling and creative insight are currently safe (asymmetric similarity discovery can't be automated)
-- ❓ Signal: AI tools still have engineering blind spots (source map leak = AI can't replace engineering judgment)
-```
-
-**Why can't RAG do this?**
-
-Because RAG works by "retrieving text fragments" — it searches the vector store for passages most similar to "programmer unemployment". But none of the 18 documents discuss programmer unemployment, so RAG can't retrieve useful content.
-
-Knowledge Pipeline can answer because ingestion has already compiled documents into a **structured concept network**:
-
-- Thesis MBWGCN code implementation → concept pages [[GraphNeuralNetwork]], [[ServiceComputing]]
-- Claude Code's ARR data → entity page [[Claude Code]], concept page [[SupplyChainSecurity]]
-- Cardiac arrhythmia clinical judgment → concept pages [[RonT Syndrome]], [[CouplingInterval]]
-
-At query time, the system doesn't search text fragments — it **reasons** between concept and entity pages: the thesis's "coding work" and Claude Code's "AI programming capability" connect through the concept network; medicine's "clinical judgment" and engineering's "architecture decisions" relate through their shared trait of "contextual reasoning".
-
-**This is the fundamental difference: RAG searches for answers in document fragments. Knowledge Pipeline reasons for answers within your knowledge system.**
+**The fundamental difference: RAG searches for answers in document fragments. Knowledge Pipeline reasons for answers within your knowledge system.**
 
 ---
 

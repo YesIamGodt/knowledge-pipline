@@ -37,9 +37,8 @@ def test_pause_and_resume():
     # 暂停
     assert manager.pause('test-job') == False  # 不能暂停 idle 状态
 
-    # 先设为 generating
-    state = manager.get_state('test-job')
-    state.status = 'generating'
+    # 先设为 generating（使用测试专用方法）
+    manager._update_state_directly('test-job', status='generating')
 
     # 现在可以暂停
     assert manager.pause('test-job') == True
@@ -105,10 +104,36 @@ def test_cleanup_old_jobs():
     deleted = manager.cleanup_old_jobs(max_age_hours=0)
     assert deleted == 0
 
-    # 手动修改创建时间，模拟旧任务
-    state = manager.get_state('test-job')
-    state.created_at = datetime.fromtimestamp(0)  # 1970年
+    # 手动修改创建时间，模拟旧任务（使用测试专用方法）
+    manager._update_state_directly('test-job', created_at=datetime.fromtimestamp(0))  # 1970年
 
     deleted = manager.cleanup_old_jobs(max_age_hours=0)
     assert deleted == 1
     assert manager.get_state('test-job') is None
+
+
+def test_concurrent_pause_resume():
+    """Test concurrent access to pause/resume"""
+    import threading
+
+    manager = GenerationStateManager()
+    manager.create_job('test-job', ['test'], 'Test', [])
+
+    # Modify to generating state (using test-only method)
+    manager._update_state_directly('test-job', status='generating')
+
+    results = []
+
+    def pause_job():
+        time.sleep(0.01)
+        results.append(manager.pause('test-job'))
+
+    threads = [threading.Thread(target=pause_job) for _ in range(10)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    # Only one should succeed
+    success_count = sum(1 for r in results if r)
+    assert success_count == 1

@@ -5,11 +5,21 @@
 import threading
 from typing import Dict, List, Optional, Any
 from datetime import datetime
+from copy import deepcopy
 from backend.ppt.models import GenerationState, SlideLayout
 
 
 class GenerationStateManager:
     """管理生成任务状态，支持暂停/恢复"""
+
+    # Valid state transitions
+    VALID_TRANSITIONS = {
+        'idle': ['generating'],
+        'generating': ['paused', 'completed', 'failed'],
+        'paused': ['generating'],
+        'completed': [],
+        'failed': ['generating']
+    }
 
     def __init__(self):
         self.states: Dict[str, GenerationState] = {}
@@ -41,15 +51,26 @@ class GenerationStateManager:
             return state
 
     def get_state(self, job_id: str) -> Optional[GenerationState]:
-        """获取任务状态"""
+        """获取任务状态（返回防御性拷贝）"""
         with self.lock:
-            return self.states.get(job_id)
+            state = self.states.get(job_id)
+            if state:
+                # Return a copy to prevent external mutation
+                return deepcopy(state)
+            return None
 
     def pause(self, job_id: str) -> bool:
         """暂停任务"""
         with self.lock:
             state = self.states.get(job_id)
-            if state and state.status == 'generating':
+            if not state:
+                return False
+
+            # Validate state transition
+            if state.status not in self.VALID_TRANSITIONS or 'paused' not in self.VALID_TRANSITIONS[state.status]:
+                return False
+
+            if state.status == 'generating':
                 state.status = 'paused'
                 state.updated_at = datetime.now()
                 # 保存当前上下文到 stack
@@ -68,7 +89,14 @@ class GenerationStateManager:
         """恢复任务"""
         with self.lock:
             state = self.states.get(job_id)
-            if state and state.status == 'paused':
+            if not state:
+                return False
+
+            # Validate state transition
+            if state.status not in self.VALID_TRANSITIONS or 'generating' not in self.VALID_TRANSITIONS[state.status]:
+                return False
+
+            if state.status == 'paused':
                 state.status = 'generating'
                 state.updated_at = datetime.now()
 
@@ -102,17 +130,18 @@ class GenerationStateManager:
 
     def get_context_for_resume(self, job_id: str) -> Optional[Dict[str, Any]]:
         """生成恢复时的上下文（包含用户编辑）"""
-        state = self.get_state(job_id)
-        if not state:
-            return None
+        with self.lock:  # Hold lock for entire read
+            state = self.states.get(job_id)
+            if not state:
+                return None
 
-        return {
-            'original_instruction': state.instruction,
-            'slides_so_far': state.slides.copy(),
-            'recent_user_edits': self._get_recent_edits(state),
-            'next_slide_index': state.current_index,
-            'template_layouts': [l.__dict__ for l in state.template_layouts]
-        }
+            return {
+                'original_instruction': state.instruction,
+                'slides_so_far': state.slides.copy(),
+                'recent_user_edits': self._get_recent_edits(state),
+                'next_slide_index': state.current_index,
+                'template_layouts': [l.__dict__ for l in state.template_layouts]
+            }
 
     def _get_recent_edits(self, state: GenerationState) -> Dict[int, Dict[str, Any]]:
         """获取最近的用户编辑（最近 3 个）"""
@@ -138,3 +167,14 @@ class GenerationStateManager:
                 del self.states[job_id]
 
             return len(to_delete)
+
+    def _update_state_directly(self, job_id: str, **kwargs) -> bool:
+        """直接更新状态（仅供测试使用）"""
+        with self.lock:
+            state = self.states.get(job_id)
+            if state:
+                for key, value in kwargs.items():
+                    if hasattr(state, key):
+                        setattr(state, key, value)
+                return True
+            return False

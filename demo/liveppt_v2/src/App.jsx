@@ -3,7 +3,6 @@ import WikiSelector from './components/WikiSelector';
 import SlideCanvas from './components/SlideCanvas';
 import ControlPanel from './components/ControlPanel';
 import ChatPanel from './components/ChatPanel';
-import { useSSE } from './hooks/useSSE';
 import './App.css';
 
 function App() {
@@ -23,48 +22,79 @@ function App() {
       .catch(err => console.error('Failed to load wiki:', err));
   }, []);
 
-  // SSE 连接
-  const { events, isConnected, error } = useSSE(
-    generationStatus === 'generating' ? `/api/generate` : null,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        wiki_ids: selectedWikiIds,
-        instruction: 'Generate PPT',
-        template_path: null
-      })
-    }
-  );
-
   // 处理 SSE 事件
-  useEffect(() => {
-    if (events.length > 0) {
-      const latestEvent = events[events.length - 1];
-      console.log('SSE Event:', latestEvent);
+  const handleSSEEvent = (event) => {
+    console.log('SSE Event:', event);
 
-      switch (latestEvent.type) {
-        case 'outline':
-          console.log('Outline received:', latestEvent.slides);
-          break;
-        case 'slide':
-          setSlides(prev => [...prev, latestEvent.slide]);
-          break;
-        case 'done':
-          setGenerationStatus('idle');
-          break;
-        case 'error':
-          console.error('Generation error:', latestEvent.message);
-          setGenerationStatus('idle');
-          break;
-      }
+    switch (event.type) {
+      case 'outline':
+        console.log('Outline received:', event.slides);
+        break;
+      case 'job_id':
+        setJobId(event.job_id);
+        break;
+      case 'slide':
+        setSlides(prev => [...prev, event.slide]);
+        break;
+      case 'done':
+        setGenerationStatus('idle');
+        break;
+      case 'error':
+        console.error('Generation error:', event.message);
+        setGenerationStatus('idle');
+        break;
     }
-  }, [events]);
+  };
 
-  const handleGenerate = (instruction) => {
+  const handleGenerate = async (instruction) => {
     setSlides([]);
     setCurrentSlideIndex(0);
     setGenerationStatus('generating');
+
+    try {
+      // Step 1: POST to start generation
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wiki_ids: selectedWikiIds,
+          instruction: instruction,
+          template_path: null
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start generation');
+      }
+
+      // Step 2: Read SSE stream from response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              handleSSEEvent(data);
+            } catch (err) {
+              console.error('Failed to parse SSE event:', err);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Generation error:', error);
+      setGenerationStatus('idle');
+    }
   };
 
   const handlePause = async () => {

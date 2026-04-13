@@ -104,6 +104,9 @@ def generate():
     def event_stream():
         """SSE 事件流"""
         try:
+            # Send job_id FIRST so frontend can pause/resume
+            yield f"data: {json.dumps({'type': 'job_id', 'job_id': job_id})}\n\n"
+
             for event in pipeline.generate(
                 wiki_ids=wiki_ids,
                 instruction=instruction,

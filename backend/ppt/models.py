@@ -22,6 +22,15 @@ class SlideType(str, Enum):
     FLOWCHART = "flowchart"
 
 
+class GenerationStatus(str, Enum):
+    """Generation task status."""
+    IDLE = "idle"
+    GENERATING = "generating"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    ERROR = "error"
+
+
 @dataclass
 class OutlineItem:
     """A single item in the presentation outline (Phase 1 output)."""
@@ -194,6 +203,13 @@ class LayoutElement:
     height: Optional[float] = None
     align: str = 'left'  # 'left', 'center', 'right'
 
+    def __post_init__(self):
+        """Validate coordinates are within valid range."""
+        if not 0 <= self.x <= 1:
+            raise ValueError(f"x must be between 0 and 1, got {self.x}")
+        if not 0 <= self.y <= 1:
+            raise ValueError(f"y must be between 0 and 1, got {self.y}")
+
 
 @dataclass
 class SlideLayout:
@@ -228,13 +244,17 @@ class FabricObject:
 class GenerationState:
     """生成任务状态"""
     job_id: str
-    status: str  # 'idle', 'generating', 'paused', 'completed', 'error'
-    slides: List[Dict[str, Any]]  # Fabric JSON 格式的幻灯片列表
-    current_index: int
-    wiki_ids: List[str]
-    instruction: str
-    template_layouts: List[SlideLayout]
-    user_edits: Dict[int, Dict[str, Any]]  # slide_index -> fabric_json
-    context_stack: List[Dict[str, Any]]  # LLM 上下文
+    status: GenerationStatus  # 'idle', 'generating', 'paused', 'completed', 'error'
+    slides: List[Dict[str, Any]] = field(default_factory=list)  # Fabric JSON 格式的幻灯片列表
+    current_index: int = 0
+    wiki_ids: List[str] = field(default_factory=list)
+    instruction: str = ""
+    template_layouts: List[SlideLayout] = field(default_factory=list)
+    user_edits: Dict[int, Dict[str, Any]] = field(default_factory=dict)  # slide_index -> fabric_json
+    context_stack: List[Dict[str, Any]] = field(default_factory=list)  # LLM 上下文
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
+
+    def touch(self):
+        """Update the updated_at timestamp"""
+        self.updated_at = datetime.now()

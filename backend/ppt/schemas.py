@@ -25,7 +25,7 @@ class PauseRequest(BaseModel):
 
 class ResumeRequest(BaseModel):
     job_id: str
-    user_edits: Dict[int, Dict[str, Any]] = {}
+    user_edits: Dict[int, Dict[str, Any]] = Field(default_factory=dict)
 
 
 class ExportRequest(BaseModel):

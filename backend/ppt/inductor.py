@@ -7,10 +7,9 @@ from typing import List
 from collections import defaultdict
 from pptx import Presentation
 from pptx.util import Inches
-import cv2
-import numpy as np
 
 from backend.ppt.models import SlideLayout, LayoutElement
+
 
 class SlideInducter:
     """
@@ -22,6 +21,14 @@ class SlideInducter:
     3. 聚类相似的布局
     4. 生成布局 schema
     """
+
+    # Font size thresholds for text classification
+    TITLE_FONT_SIZE = 32
+    SUBTITLE_FONT_SIZE = 20
+
+    # Text length thresholds
+    TITLE_TEXT_LENGTH = 20
+    SUBTITLE_TEXT_LENGTH = 50
 
     def __init__(self):
         self.layouts: List[SlideLayout] = []
@@ -73,7 +80,16 @@ class SlideInducter:
         """提取幻灯片中的元素"""
         elements = []
 
+        # Handle empty slides
+        if not slide.shapes:
+            return elements
+
         for shape in slide.shapes:
+            # Skip zero-size shapes to prevent division by zero
+            if shape.width == 0 or shape.height == 0:
+                continue
+            if slide_width == 0 or slide_height == 0:
+                continue
             # 跳过隐藏的形状（使用 hasattr 检查，因为不是所有形状都有 visible 属性）
             if hasattr(shape, 'visible') and not shape.visible:
                 continue
@@ -121,17 +137,17 @@ class SlideInducter:
                         # 转换为磅
                         size_pt = font_size.pt if hasattr(font_size, 'pt') else font_size
 
-                        if size_pt > 32:
+                        if size_pt > self.TITLE_FONT_SIZE:
                             return 'title'
-                        elif size_pt > 20:
+                        elif size_pt > self.SUBTITLE_FONT_SIZE:
                             return 'subtitle'
                         else:
                             return 'text'
 
         # 根据文本长度判断
-        if len(text) < 20 and '\n' not in text:
+        if len(text) < self.TITLE_TEXT_LENGTH and '\n' not in text:
             return 'title'
-        elif len(text) < 50:
+        elif len(text) < self.SUBTITLE_TEXT_LENGTH:
             return 'subtitle'
         else:
             return 'text'

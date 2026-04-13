@@ -47,3 +47,52 @@ def test_nonexistent_file():
 
     with pytest.raises(FileNotFoundError):
         inductor.analyze('/nonexistent/file.pptx')
+
+def test_empty_ppt(tmp_path):
+    """测试空 PPT（没有形状）"""
+    prs = Presentation()
+    prs.slides.add_slide(prs.slide_layouts[0])
+
+    template_path = tmp_path / "empty_template.pptx"
+    prs.save(str(template_path))
+
+    inductor = SlideInducter()
+    layouts = inductor.analyze(str(template_path))
+
+    # 应该提取出布局，即使元素为空
+    assert len(layouts) >= 1
+
+def test_mixed_content(tmp_path):
+    """测试混合内容（文本和图片）"""
+    prs = Presentation()
+
+    # 创建带文本和图片的幻灯片
+    slide = prs.slides.add_slide(prs.slide_layouts[5])
+
+    # 添加文本框
+    text_box = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(3), Inches(1))
+    text_frame = text_box.text_frame
+    text_frame.text = "This is a text box"
+
+    # 添加另一个文本框（模拟标题）
+    title_box = slide.shapes.add_textbox(Inches(2), Inches(3), Inches(4), Inches(0.5))
+    title_frame = title_box.text_frame
+    title_frame.text = "Title Here"
+    # 设置大字体
+    for paragraph in title_frame.paragraphs:
+        for run in paragraph.runs:
+            run.font.size = Pt(36)
+
+    template_path = tmp_path / "mixed_content.pptx"
+    prs.save(str(template_path))
+
+    inductor = SlideInducter()
+    layouts = inductor.analyze(str(template_path))
+
+    # 应该提取出布局
+    assert len(layouts) >= 1
+
+    # 检查是否识别出不同类型的元素
+    layout = layouts[0]
+    element_types = [elem.type for elem in layout.elements]
+    assert 'title' in element_types

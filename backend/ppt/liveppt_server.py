@@ -22,7 +22,8 @@ from backend.ppt.streaming_engine import StreamingEngine
 from core.llm_config import check_llm_config
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=['http://localhost:3000', 'http://localhost:5678'], supports_credentials=True)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
 # 全局状态管理器
 state_manager = GenerationStateManager()
@@ -73,6 +74,13 @@ def generate():
         return jsonify({'error': 'Pipeline not initialized'}), 500
 
     data = request.json
+
+    # Input validation
+    if not data or not data.get('wiki_ids'):
+        return jsonify({'error': 'wiki_ids is required'}), 400
+    if not data.get('instruction'):
+        return jsonify({'error': 'instruction is required'}), 400
+
     wiki_ids = data.get('wiki_ids', [])
     instruction = data.get('instruction', '')
     template_path = data.get('template_path')
@@ -90,12 +98,6 @@ def generate():
 
     # 创建生成状态
     from backend.ppt.models import GenerationState
-    from backend.ppt.inductor import SlideInducter
-
-    # 如果提供了模板，使用 inductor 提取布局
-    if template_path:
-        inductor = SlideInducter()
-        template_layouts = inductor.analyze(template_path)
 
     state_manager.create_job(job_id, wiki_ids, instruction, template_layouts)
 
@@ -159,16 +161,31 @@ def export_pptx():
     try:
         from backend.ppt.exporter import PPTXExporter
         import tempfile
+        import os
 
         exporter = PPTXExporter()
-        output_path = tempfile.mktemp(suffix='.pptx')
+
+        # Create a temp file that auto-deletes
+        with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
+            output_path = tmp.name
+
         exporter.export({'slides': slides, 'title': title}, output_path)
 
-        return send_file(
+        response = send_file(
             output_path,
             as_attachment=True,
             download_name=f'{title}.pptx'
         )
+
+        # Clean up temp file after sending
+        @response.call_on_close
+        def cleanup():
+            try:
+                os.unlink(output_path)
+            except:
+                pass
+
+        return response
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

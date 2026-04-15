@@ -95,25 +95,40 @@ def check_llm_config(skill_dir: Path) -> Dict[str, str]:
     return {"ok": "true", "path": str(cfg)}
 
 
-def ensure_server(skill_dir: Path, port: int, timeout_sec: float = 18.0) -> Dict[str, str]:
+def ensure_server(skill_dir: Path, port: int, timeout_sec: float = 30.0) -> Dict[str, str]:
     if _server_alive(port):
         return {"ok": "true", "status": "already-running", "url": f"http://localhost:{port}"}
 
     server_py = skill_dir / "demo" / "ppt_live" / "server.py"
     if not server_py.exists():
+        # Also check non-demo path
+        server_py = skill_dir / "ppt_live" / "server.py"
+    if not server_py.exists():
         return {
             "ok": "false",
             "status": "server-script-missing",
-            "path": str(server_py),
+            "path": str(skill_dir / "demo" / "ppt_live" / "server.py"),
         }
+
+    stderr_path = skill_dir / "output" / "_server_stderr.log"
+    stderr_path.parent.mkdir(parents=True, exist_ok=True)
+    stderr_file = open(str(stderr_path), "w")
+
+    popen_kwargs: Dict = dict(
+        cwd=str(skill_dir),
+        stdout=subprocess.DEVNULL,
+        stderr=stderr_file,
+        stdin=subprocess.DEVNULL,
+    )
+    # On Windows, use CREATE_NEW_PROCESS_GROUP; on Unix, use start_new_session
+    if sys.platform == "win32":
+        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        popen_kwargs["start_new_session"] = True
 
     subprocess.Popen(
         [sys.executable, str(server_py), "--port", str(port), "--no-browser"],
-        cwd=str(skill_dir),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        stdin=subprocess.DEVNULL,
-        start_new_session=True,
+        **popen_kwargs,
     )
 
     end = time.time() + timeout_sec

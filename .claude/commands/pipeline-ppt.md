@@ -31,16 +31,32 @@ $ARGUMENTS 可选，作为主题提示词。
 
 **⚠️ 禁止在此步骤使用终端命令（bash/PowerShell）。** 只用 Read 工具读取 JSON 文件即可。
 
-### 第二步：一键初始化（SKILL_DIR + LLM 配置 + 服务 + wiki 列表全部由脚本完成）
+### 第二步：定位脚本并一键初始化
 
-在终端运行（PYTHON 替换为第一步获取的完整路径）：
+#### 2a. 定位 fastpath 脚本（Read 工具，不使用终端）
+
+**用 Read 工具**依次尝试读取以下路径，取第一个存在的作为 FASTPATH：
+1. `~/.agents/skills/knowledge-pipline/tools/pipeline_ppt_fastpath.py`
+2. `~/.claude/skills/knowledge-pipline/tools/pipeline_ppt_fastpath.py`
+
+> Windows 上 `~` = `C:\Users\{用户名}`，即检查：
+> - `C:\Users\86187\.agents\skills\knowledge-pipline\tools\pipeline_ppt_fastpath.py`
+> - `C:\Users\86187\.claude\skills\knowledge-pipline\tools\pipeline_ppt_fastpath.py`
+
+如果都不存在 → 提示用户安装 knowledge-pipline skill，**立即停止**。
+
+#### 2b. 执行初始化（一条终端命令）
+
 ```
-"PYTHON" tools/pipeline_ppt_fastpath.py bootstrap --port 5679
+"PYTHON" "FASTPATH" bootstrap --port 5679
 ```
 
-> 示例：`"C:\Users\86187\AppData\Local\Programs\Python\Python312\python.exe" tools/pipeline_ppt_fastpath.py bootstrap --port 5679`
+> **PYTHON 和 FASTPATH 都必须是绝对路径**，示例：
+> `"C:\Users\86187\AppData\Local\Programs\Python\Python312\python.exe" "C:\Users\86187\.agents\skills\knowledge-pipline\tools\pipeline_ppt_fastpath.py" bootstrap --port 5679`
 
-**该脚本内部自动完成以下全部工作（< 1 秒）：**
+**⚠️ 绝对禁止使用相对路径 `tools/pipeline_ppt_fastpath.py`** — bash 的 CWD 不一定是工作区根目录或 SKILL_DIR，会导致 "No such file" 错误。
+
+**该脚本内部自动完成以下全部工作：**
 1. ✅ 自动定位 SKILL_DIR（搜索 `~/.agents/skills/` 和 `~/.claude/skills/`）
 2. ✅ 校验 `SKILL_DIR/.llm_config.json` LLM 配置
 3. ✅ 启动或复用预览服务器（`http://localhost:5679`）
@@ -51,13 +67,14 @@ $ARGUMENTS 可选，作为主题提示词。
 
 若输出包含以下任一失败标记，必须立即停止并提示用户：
 - `LLM_CONFIG_OK=false` → 提示运行 `/pipeline-config` 配置 LLM
-- `SERVER_OK=false` → 提示检查端口占用或 `server.py` 是否存在
+- `SERVER_OK=false` → 提示检查端口占用，查看 `SKILL_DIR/output/_server_stderr.log`
 - `WIKI_EMPTY=true` → 提示先运行 `/pipeline-ingest` 摄入文档
 
 **⚠️ 绝对禁止以下行为（历史上造成 20 分钟级超时的根因）：**
 - 用 `test -d`、`Test-Path`、bash `if/elif/fi` 探测 SKILL_DIR
 - 用终端命令检查 `.llm_config.json` 是否存在
 - 拆分初始化为多条 shell 命令
+- 使用相对路径调用 Python 脚本
 - 上述全部已封装在 Python 脚本中，**一条命令完成**
 
 ### 第三步：Python 失败时的回退
@@ -339,9 +356,9 @@ HTML 含引号，**绝对不要**嵌入 `python -c "..."` 等 shell 命令！
 
 ## 关键原则
 
-1. **所有路径基于 SKILL_DIR** — 由 fastpath 脚本自动检测，不需要手动 bash 探测
-2. **两步启动** — 第一步 Read 工具取 Python 路径 → 第二步 `"PYTHON" tools/pipeline_ppt_fastpath.py bootstrap` 一条命令完成全部初始化
-3. **禁止终端探测目录** — 不用 `test -d`、`Test-Path`、`if/elif/fi`，全部由脚本或 Read 工具完成
+1. **所有路径必须是绝对路径** — PYTHON、FASTPATH、SKILL_DIR 全部用绝对路径，禁止相对路径
+2. **两步启动** — 第一步 Read 工具取 Python 路径 → 第二步 Read 工具定位脚本 + 一条命令完成全部初始化
+3. **禁止终端探测目录** — 不用 `test -d`、`Test-Path`、`if/elif/fi`，全部由 Read 工具或 Python 脚本完成
 3. **三步严格交互** — ① 必选 wiki 文档 ② 描述需求 ③ 必选模板编号，按顺序逐步提问
 4. **选项受限** — 第 ③ 步禁止自由输入（`allowFreeformInput: false`），只能从选项中选择
 5. **第①步只能手动输入原始文件编号** — 不得使用分类选项，不得只展示少量“热门文档”

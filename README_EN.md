@@ -13,9 +13,34 @@ English | [中文](README.md)
 A Claude Code skill — throw PDF, images, Word, Excel, video at it, and it compiles them into a structured Markdown wiki + interactive knowledge graph.  
 Cross-document contradiction detection, knowledge fusion, deep reasoning chains — not just retrieval, but **reasoning**.
 
-[Quick Start](#-quick-start) · [Who Needs This](#-who-needs-this) · [Comparison](#-comparison) · [Core Capabilities](#-core-capabilities) · [Use Cases](#-use-cases)
+[Quick Start](#-quick-start) · [Live PPT Flagship](#-live-ppt--knowledge-driven-presentations-flagship-feature) · [Who Needs This](#-who-needs-this) · [Comparison](#-comparison) · [Core Capabilities](#-core-capabilities)
 
 </div>
+
+---
+
+## 📑 Live PPT — Knowledge-Driven Presentations (🚀 Flagship Feature)
+
+> **Problem**: Gemini, GPT, Gamma can generate pretty slides. But throw a 200-page audit report at them? They'll give you generic fluff. They don't *understand* your documents — they're just stitching together the model's general knowledge.
+>
+> **Solution**: `/pipeline-ppt` doesn't take a prompt as input — it takes your **entire knowledge base**. 18 documents compiled into entity networks, concept relationships, contradiction detection results — all become the content source for your slides.
+
+```
+/pipeline-ppt "AI Security Analysis"
+/pipeline-ppt "Competitive Analysis" --template 3 --pages 10
+```
+
+**Core capabilities**:
+- 🧠 **Knowledge-base driven** — Extracts key points from wiki entities/concepts/contradictions, not generic model knowledge
+- 🎨 **8 built-in templates** — Business, tech, academic scenarios covered, one-click selection
+- 📤 **PPTX export** — One-click browser export with editable text (not screenshots)
+- ✏️ **Natural language editing** — "Add a competitor comparison table to slide 3", live update without breaking other slides
+- 📖 **Source tracing** — Every slide attributes its knowledge source, audit-ready
+- 🎭 **Template clone** — Upload your company's PPT template, AI learns its colors and layout to generate new content
+- 📐 **Smart layout** — Auto-scales when content overflows, never clips or truncates
+- ⌨️ **Keyboard navigation** — ←→ navigate · F fullscreen · Home/End
+
+> **Others use AI to make "pretty slides". You use Knowledge Pipeline to make "insightful analysis reports".**
 
 ---
 
@@ -296,29 +321,6 @@ Generates a self-contained `graph.html` — open in browser to interactively exp
 - Node border color by community cluster (Louvain detection)
 - Edges distinguish explicit links from inferred relationships
 - Search and zoom support
-
-### 📑 Live PPT — Knowledge-Driven Presentations (🚀 Flagship Feature)
-
-> **Problem**: Gemini, GPT, Gamma can generate pretty slides. But throw a 200-page audit report at them? They'll give you generic fluff. They don't *understand* your documents — they're just stitching together the model's general knowledge.
->
-> **Solution**: `/pipeline-ppt` doesn't take a prompt as input — it takes your **entire knowledge base**. 18 documents compiled into entity networks, concept relationships, contradiction detection results — all become the content source for your slides.
-
-```
-/pipeline-ppt "AI Security Analysis"
-/pipeline-ppt "Competitive Analysis" --template 3 --pages 10
-```
-
-**Core capabilities**:
-- 🧠 **Knowledge-base driven** — Extracts key points from wiki entities/concepts/contradictions, not generic model knowledge
-- 🎨 **8 built-in templates** — Business, tech, academic scenarios covered, one-click selection
-- 📤 **PPTX export** — One-click browser export with editable text (not screenshots)
-- ✏️ **Natural language editing** — "Add a competitor comparison table to slide 3", live update without breaking other slides
-- 📖 **Source tracing** — Every slide attributes its knowledge source, audit-ready
-- 🎭 **Template clone** — Upload your company's PPT template, AI learns its colors and layout to generate new content
-- 📐 **Smart layout** — Auto-scales when content overflows, never clips or truncates
-- ⌨️ **Keyboard navigation** — ←→ navigate · F fullscreen · Home/End
-
-> Others use AI to make "pretty slides". You use Knowledge Pipeline to make "insightful analysis reports".
 
 ---
 

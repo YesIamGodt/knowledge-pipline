@@ -8,18 +8,18 @@ $ARGUMENTS 可选，作为主题提示词。
 
 ## 执行步骤
 
-### 第一步：确定技能目录 SKILL_DIR（一次性检测，禁止分两次检查）
+### 第一步：确定技能目录 SKILL_DIR（bash 兼容，避免 PowerShell 引号问题）
 
-**只运行这一条 PowerShell 命令**，一次性输出 SKILL_DIR：
+**只运行这一条 bash 兼容命令**，一次性输出 SKILL_DIR：
 
-```powershell
-$p1 = "$env:USERPROFILE\.agents\skills\knowledge-pipline"; $p2 = "$env:USERPROFILE\.claude\skills\knowledge-pipline"; if (Test-Path $p1) { "SKILL_DIR=$p1" } elseif (Test-Path $p2) { "SKILL_DIR=$p2" } else { "ERROR: knowledge-pipline skill not found" }
+```bash
+if [ -d "$HOME/.agents/skills/knowledge-pipline" ]; then echo "SKILL_DIR=$HOME/.agents/skills/knowledge-pipline"; elif [ -d "$HOME/.claude/skills/knowledge-pipline" ]; then echo "SKILL_DIR=$HOME/.claude/skills/knowledge-pipline"; else echo "ERROR: knowledge-pipline skill not found"; fi
 ```
 
-- 输出 `SKILL_DIR=C:\Users\xxx\...` → 将该完整路径设为 SKILL_DIR，继续执行
+- 输出 `SKILL_DIR=...` → 将该路径设为 SKILL_DIR，继续执行
 - 输出 `ERROR` → 提示用户安装 skill，**立即停止**
 
-⚠️ **禁止分两次单独检查两个路径再判断** — 这是已知 BUG：分开检查时，第二次的 `NOT_FOUND` 输出会被误拼入路径，导致后续所有步骤使用错误的 SKILL_DIR。
+⚠️ **禁止**在 Bash 工具里直接拼复杂 PowerShell 变量赋值（历史上会触发转义失败，浪费大量重试）。
 
 **后续所有路径都指 SKILL_DIR 下的子目录：**
 - `demo/ppt_live/` — 服务器、CLI、模板
@@ -28,38 +28,28 @@ $p1 = "$env:USERPROFILE\.agents\skills\knowledge-pipline"; $p2 = "$env:USERPROFI
 - `output/` — 输出文件
 - `backend/ppt/` — 生成引擎
 
-### 第二步：检查 LLM 配置
+### 第二步：执行快路径脚本（1 条命令完成配置检查 + 服务启动 + wiki 编号）
 
-读取 `SKILL_DIR/.llm_config.json`。
-- 如果不存在 → 提示用户先运行 `/pipeline-config`，然后停止。
-- 如果存在 → 继续。
+在终端执行：
 
-### 第三步：启动预览服务器（异步后台）
-
-在异步终端中启动（不阻塞 Agent）：
-
-```
-python "SKILL_DIR/demo/ppt_live/server.py"
+```bash
+python "SKILL_DIR/tools/pipeline_ppt_fastpath.py" bootstrap --port 5679
 ```
 
-- 服务器会自动杀死旧进程（内置 `_kill_existing_server`）
-- **不要加 `--open`**，VS Code / IDE 会自动检测端口弹出预览
-- 等待看到 `LivePPT Preview Server` 输出后继续
-- 如果启动失败，告诉用户手动在终端执行此命令，但**不要跳过**
+该命令一次性完成：
+- 检查 `SKILL_DIR/.llm_config.json` 是否可用
+- 启动或复用预览服务器（`http://localhost:5679`）
+- 按分类打印 wiki 下所有 `.md` 的完整编号列表
+- 生成 `SKILL_DIR/output/_wiki_index_map.json`
 
-### 第四步：交互式三步选择（严格顺序，逐步提问，全程中文）
+若输出包含以下任一失败标记，必须立即停止并提示用户：
+- `LLM_CONFIG_OK=false`
+- `SERVER_OK=false`
+- `WIKI_EMPTY=true`
 
-在服务器启动的同时，用 Agent 工具准备数据，然后**按顺序**逐步与用户交互。
+### 第三步：交互式三步选择（严格顺序，逐步提问，全程中文）
 
-#### 准备：用终端列举 wiki 下所有 .md 文件（必须用终端，禁止用 list_dir 自行推断）
-
-**在终端运行以下命令**，按目录结构列出 `SKILL_DIR/wiki/` 下所有 .md 文件并编号：
-
-```powershell
-$wiki = "SKILL_DIR\wiki"; $n=1; foreach ($sub in @("sources","entities","concepts","syntheses")) { $dir="$wiki\$sub"; if (Test-Path $dir) { Write-Host "── $sub ──"; Get-ChildItem $dir -Filter "*.md" | Sort-Object Name | ForEach-Object { Write-Host "  $n. $sub/$($_.Name)"; $n++ } } }
-```
-
-（将 `SKILL_DIR` 替换为第一步得到的实际路径）
+快路径脚本执行完后，再按顺序交互。
 
 输出示例：
 ```
@@ -86,8 +76,15 @@ $wiki = "SKILL_DIR\wiki"; $n=1; foreach ($sub in @("sources","entities","concept
 由于 AskUserQuestion 存在选项数量限制，**第①步禁止使用 options 列表承载全部文档**。
 
 第①步必须这样做：
-1. 先在终端完整打印全部 wiki 文档编号列表（上一步已完成）
-2. 再用 AskUserQuestion 仅提一个中文自由输入问题，让用户手动输入编号
+1. 上一步终端已打印完整编号列表
+2. 用 AskUserQuestion 仅提一个中文自由输入问题，让用户手动输入编号
+3. 收到用户输入后，执行固定解析命令（不要让 LLM 手写解析逻辑）
+
+```bash
+python "SKILL_DIR/tools/pipeline_ppt_fastpath.py" parse-selection "用户输入原文"
+```
+
+解析结果会写入：`SKILL_DIR/output/_selected_wiki_docs.json`
 
 AskUserQuestion 要求：
 - `allowFreeformInput: true`
@@ -106,9 +103,9 @@ AskUserQuestion 要求：
 - 用户必须输入具体编号，至少 1 个（如 `5`、`1,4,9`、`2-6`、`1,3,8-10`）
 - **禁止** Claude 替用户决定选哪些、跳过选择、或聚合分组后让用户选"主题"
 - **禁止**把选择入口做成“安全类/技术类/分析类/产品类”等分类入口
-- 收到输入后，必须解析编号并去重、排序、校验越界
+- 收到输入后，必须调用 `parse-selection` 命令解析并校验
 - 若输入非法（非数字、范围错误、越界、空输入），必须用中文提示重输
-- 解析成功后，用 `read_file` 完整读取每个选中文件的内容，作为第五步的 PPT 素材
+- 解析成功后，从 `_selected_wiki_docs.json` 读取选中路径，再用 `read_file` 完整读取每个选中文件内容，作为第五步素材
 
 #### 交互语言硬约束（必须遵守）
 
@@ -302,6 +299,11 @@ HTML 含引号，**绝对不要**嵌入 `python -c "..."` 等 shell 命令！
 | 所有页背景改成 X | `batch --theme-bg "X"` |
 | 复杂批量修改 | `state` → 修改 JSON → `push` |
 
+**执行稳定性要求（减少 20 分钟级重试）：**
+- 编辑后必须立即执行一次 `state`，确认页数、标题和顺序已落盘
+- 若是结构变更（插入/删除/换页），必须再执行 `goto N` 验证目标页可见
+- 如验证失败，优先重推完整 `push`，禁止连续盲改
+
 ### 第八步：导出
 
 当用户说"导出"时，**不要使用终端 CLI 导出**（服务器端导出不稳定），直接提示用户：
@@ -316,7 +318,7 @@ HTML 含引号，**绝对不要**嵌入 `python -c "..."` 等 shell 命令！
 ## 关键原则
 
 1. **所有路径基于 SKILL_DIR** — 安装后统一在 `~/.agents/skills/knowledge-pipline` 下
-2. **服务器必须启动** — 实时预览 + CLI 推送都依赖它
+2. **优先快路径脚本** — `pipeline_ppt_fastpath.py bootstrap` 用 1 条命令完成关键准备
 3. **三步严格交互** — ① 必选 wiki 文档 ② 描述需求 ③ 必选模板编号，按顺序逐步提问
 4. **选项受限** — 第 ③ 步禁止自由输入（`allowFreeformInput: false`），只能从选项中选择
 5. **第①步只能手动输入原始文件编号** — 不得使用分类选项，不得只展示少量“热门文档”
@@ -324,3 +326,4 @@ HTML 含引号，**绝对不要**嵌入 `python -c "..."` 等 shell 命令！
 7. **上传模板触发子流程** — 识别完毕后回到第 ① 步重新选择，第 ③ 步会多出第 9 个选项
 8. **不写临时 Python 脚本** — 只用 `create_file` 写 JSON + CLI 推送
 9. **绝不嵌入 HTML 到 shell** — 先写 JSON 文件，再 push 文件路径
+10. **每次编辑后先验证再继续** — `state` / `goto` 失败时先修复状态同步，避免错误累积到导出

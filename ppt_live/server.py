@@ -71,6 +71,9 @@ def push():
             _state["slides"] = data["slides"]
         if "current" in data:
             _state["current"] = data["current"]
+        # Keep current index valid after structural changes (insert/delete/reset).
+        n = len(_state["slides"])
+        _state["current"] = max(0, min(int(_state.get("current", 0)), n - 1)) if n else 0
         snapshot = json.dumps(_state, ensure_ascii=False)
         dead = []
         for q in _clients:

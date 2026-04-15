@@ -31,6 +31,7 @@ import argparse
 import json
 import os
 import sys
+import re
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -64,6 +65,46 @@ def _get(path):
         sys.exit(1)
 
 
+def _verify_state(expected_count=None, expected_current=None):
+    """Best-effort verification that server state matches the last operation."""
+    state = _get("/api/state")
+    slides = state.get("slides", [])
+    current = state.get("current", 0)
+
+    if expected_count is not None and len(slides) != expected_count:
+        print(f"⚠️ 状态校验失败: 期望页数 {expected_count}，实际 {len(slides)}", file=sys.stderr)
+        sys.exit(2)
+
+    if expected_current is not None and current != expected_current:
+        print(f"⚠️ 状态校验失败: 期望当前页 {expected_current + 1}，实际 {current + 1}", file=sys.stderr)
+        sys.exit(2)
+
+
+def _replace_first_text_node(html, new_text):
+    """Replace the first non-empty text node in an HTML string.
+
+    This is a safe fallback for HTML slides when only --title/--text is provided.
+    """
+    if not html:
+        return html
+
+    # Prefer replacing a large title-like node first.
+    title_like = re.search(
+        r'(<([a-zA-Z0-9]+)[^>]*style="[^"]*font-size\s*:\s*([2-9][0-9]|[1-9][0-9]{2})px[^"]*"[^>]*>)([^<]+)(</\2>)',
+        html,
+        flags=re.IGNORECASE,
+    )
+    if title_like:
+        return html[:title_like.start(4)] + new_text + html[title_like.end(4):]
+
+    # Generic fallback: first visible text chunk between tags.
+    generic = re.search(r'>([^<\s][^<]*)<', html)
+    if generic:
+        return html[:generic.start(1)] + new_text + html[generic.end(1):]
+
+    return html
+
+
 def cmd_push(args):
     """Push slides JSON or HTML directory to preview server."""
     try:
@@ -92,6 +133,7 @@ def cmd_push(args):
 
     result = _post("/api/push", {"slides": slides})
     print(f"✅ 已推送 {result.get('count', '?')} 页到浏览器")
+    _verify_state(expected_count=len(slides))
 
 
 def _load_slides_from_dir(dir_path):
@@ -122,6 +164,7 @@ def cmd_goto(args):
     """Navigate to a specific slide."""
     result = _post("/api/goto", {"index": args.index - 1})  # 1-indexed for user
     print(f"✅ 已跳转到第 {result.get('current', 0) + 1} 页")
+    _verify_state(expected_current=result.get("current", 0))
 
 
 def cmd_export(args):
@@ -144,21 +187,32 @@ def cmd_edit(args):
         sys.exit(1)
 
     slide = slides[idx]
-    if args.title:
-        slide["title"] = args.title
-    if args.subtitle:
-        slide["subtitle"] = args.subtitle
-    if args.badge:
-        slide["badge"] = args.badge
-    if args.slide_type:
-        slide["type"] = args.slide_type
-    if args.items:
-        slide["items"] = args.items
-    if args.text:
-        slide["text"] = args.text
+    if args.html is not None:
+        slide["html"] = args.html
+    else:
+        if args.title:
+            slide["title"] = args.title
+        if args.subtitle:
+            slide["subtitle"] = args.subtitle
+        if args.badge:
+            slide["badge"] = args.badge
+        if args.slide_type:
+            slide["type"] = args.slide_type
+        if args.items:
+            slide["items"] = args.items
+        if args.text:
+            slide["text"] = args.text
+
+        # If this is an HTML slide, also patch the HTML text so preview/export stay in sync.
+        if isinstance(slide.get("html"), str):
+            if args.title:
+                slide["html"] = _replace_first_text_node(slide["html"], args.title)
+            elif args.text:
+                slide["html"] = _replace_first_text_node(slide["html"], args.text)
 
     result = _post("/api/push", {"slides": slides, "current": idx})
     print(f"✅ 已更新第 {args.index} 页")
+    _verify_state(expected_count=len(slides), expected_current=idx)
 
 
 def cmd_batch(args):
@@ -176,6 +230,7 @@ def cmd_batch(args):
 
     result = _post("/api/push", {"slides": slides})
     print(f"✅ 已批量更新 {result.get('count', '?')} 页")
+    _verify_state(expected_count=len(slides))
 
 
 def cmd_reset(args):
@@ -211,8 +266,10 @@ def cmd_delete(args):
 
     slides.pop(idx)
     current = min(state.get("current", 0), len(slides) - 1)
-    result = _post("/api/push", {"slides": slides, "current": max(current, 0)})
+    expected_current = max(current, 0)
+    result = _post("/api/push", {"slides": slides, "current": expected_current})
     print(f"✅ 已删除第 {args.index} 页，剩余 {result.get('count', '?')} 页")
+    _verify_state(expected_count=len(slides), expected_current=expected_current)
 
 
 def cmd_insert(args):
@@ -221,20 +278,25 @@ def cmd_insert(args):
     slides = state.get("slides", [])
     idx = args.index - 1  # insert before this position
 
-    new_slide = {
-        "type": args.slide_type or "bullets",
-        "title": args.title or "",
-    }
-    if args.items:
-        new_slide["items"] = args.items
-    if args.text:
-        new_slide["text"] = args.text
-    if args.badge:
-        new_slide["badge"] = args.badge
+    if args.html is not None:
+        new_slide = {"html": args.html}
+    else:
+        new_slide = {
+            "type": args.slide_type or "bullets",
+            "title": args.title or "",
+        }
+        if args.items:
+            new_slide["items"] = args.items
+        if args.text:
+            new_slide["text"] = args.text
+        if args.badge:
+            new_slide["badge"] = args.badge
 
     slides.insert(max(0, idx), new_slide)
-    result = _post("/api/push", {"slides": slides, "current": max(0, idx)})
+    expected_current = max(0, idx)
+    result = _post("/api/push", {"slides": slides, "current": expected_current})
     print(f"✅ 已在第 {max(1, args.index)} 页插入，共 {result.get('count', '?')} 页")
+    _verify_state(expected_count=len(slides), expected_current=expected_current)
 
 
 def cmd_swap(args):
@@ -250,6 +312,7 @@ def cmd_swap(args):
     slides[a], slides[b] = slides[b], slides[a]
     result = _post("/api/push", {"slides": slides})
     print(f"✅ 已交换第 {args.a} 页和第 {args.b} 页")
+    _verify_state(expected_count=len(slides))
 
 
 def cmd_templates(args):
@@ -407,6 +470,7 @@ def main():
     # edit
     p_edit = sub.add_parser("edit", help="Edit a slide's properties")
     p_edit.add_argument("index", type=int, help="Slide number (1-indexed)")
+    p_edit.add_argument("--html", help="Replace entire slide HTML")
     p_edit.add_argument("--title", help="New title")
     p_edit.add_argument("--subtitle", help="New subtitle")
     p_edit.add_argument("--badge", help="New badge text")
@@ -430,6 +494,7 @@ def main():
     # insert
     p_ins = sub.add_parser("insert", help="Insert a new slide")
     p_ins.add_argument("index", type=int, help="Insert before this position (1-indexed)")
+    p_ins.add_argument("--html", help="Raw HTML for inserted slide")
     p_ins.add_argument("--title", help="Slide title")
     p_ins.add_argument("--type", dest="slide_type", help="Slide type")
     p_ins.add_argument("--items", nargs="+", help="Bullet items")

@@ -35,7 +35,6 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 # 全局状态管理器
 state_manager = GenerationStateManager()
 pipeline = None
-custom_templates = []  # Parsed custom templates from uploaded PPTX
 
 def init_pipeline():
     """初始化 pipeline"""
@@ -309,71 +308,6 @@ def export_pptx():
         return response
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-# ── Template API ────────────────────────────────────────────
-
-@app.route('/api/templates')
-def list_templates():
-    """List custom templates parsed from uploaded PPTX files."""
-    return jsonify({'templates': custom_templates})
-
-
-@app.route('/api/templates/upload', methods=['POST'])
-def upload_template():
-    """Upload a PPTX file and parse it as a template."""
-    if 'file' not in request.files:
-        return jsonify({'error': '未提供文件'}), 400
-
-    file = request.files['file']
-    if not file.filename:
-        return jsonify({'error': '文件名为空'}), 400
-
-    # Validate extension
-    if not file.filename.lower().endswith('.pptx'):
-        return jsonify({'error': '仅支持 .pptx 文件'}), 400
-
-    # Sanitize filename
-    safe_name = re.sub(r'[^\w\-.]', '_', file.filename)
-    save_path = UPLOAD_DIR / safe_name
-
-    try:
-        file.save(str(save_path))
-
-        # Parse template
-        from backend.ppt.template_analyzer import TemplateAnalyzer
-        analyzer = TemplateAnalyzer()
-        style = analyzer.analyze(str(save_path))
-
-        # Build template entry
-        colors = style.colors if style.colors else ['#0f1318', '#ffffff', '#c9d1d9', '#58a6ff']
-        tpl_id = f'custom-{uuid.uuid4().hex[:8]}'
-        template = {
-            'id': tpl_id,
-            'name': Path(safe_name).stem.replace('_', ' ')[:20],
-            'description': style.description or f'从 {file.filename} 解析',
-            'preview': f'linear-gradient(135deg, {colors[0]} 0%, {colors[min(1, len(colors)-1)]} 50%, {colors[min(2, len(colors)-1)]} 100%)',
-            'theme': {
-                'bg': colors[0] if len(colors) > 0 else '#0f1318',
-                'title': colors[1] if len(colors) > 1 else '#e6edf3',
-                'body': colors[2] if len(colors) > 2 else '#c9d1d9',
-                'accent': colors[3] if len(colors) > 3 else '#58a6ff',
-            },
-            'isCustom': True,
-            'fonts': style.fonts if style.fonts else [],
-            'source_file': safe_name,
-        }
-
-        custom_templates.append(template)
-        print(f"  ✓ Template parsed: {template['name']} ({len(colors)} colors, {len(style.fonts or [])} fonts)")
-
-        return jsonify({'template': template})
-
-    except Exception as e:
-        # Clean up on failure
-        if save_path.exists():
-            save_path.unlink()
-        return jsonify({'error': f'模板解析失败: {str(e)}'}), 500
 
 
 def start_server(port=5678, open_browser=True):

@@ -36,7 +36,6 @@ Cross-document contradiction detection, knowledge fusion, deep reasoning chains 
 - 📤 **PPTX export** — One-click browser export with editable text (not screenshots)
 - ✏️ **Natural language editing** — "Add a competitor comparison table to slide 3", live update without breaking other slides
 - 📖 **Source tracing** — Every slide attributes its knowledge source, audit-ready
-- 🎭 **Template clone** — Upload your company's PPT template, AI learns its colors and layout to generate new content
 - 📐 **Smart layout** — Auto-scales when content overflows, never clips or truncates
 - ⌨️ **Keyboard navigation** — ←→ navigate · F fullscreen · Home/End
 
@@ -130,7 +129,7 @@ You don't want your data sent to Google's or OpenAI's servers. You need to choos
 | 📖 Source tracing | No attribution | **Every slide cites Wiki source pages** |
 | ✏️ Editing | Regenerate entire deck | **Natural language per-slide live editing** |
 | 📤 Export | PDF / images (not editable) | **PPTX (editable text boxes + HD background)** |
-| 🎨 Templates | Platform-fixed templates | **8 built-in + upload company templates to clone** |
+| 🎨 Templates | Platform-fixed templates | **8 built-in themes, one-click selection** |
 | 💰 Cost | $20–40/mo subscription | **Free & open source, use your own LLM** |
 
 **AI PPT tools give you "pretty slides". Knowledge Pipeline gives you "insightful analysis reports".**

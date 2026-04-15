@@ -193,117 +193,6 @@ def cmd_stop(args):
         print("Server stopped (or was not running).")
 
 
-def cmd_upload_template(args):
-    """Upload a .pptx template for generation."""
-    path = args.file
-    if not os.path.exists(path):
-        print(f"❌ 文件不存在: {path}")
-        sys.exit(1)
-    data = {"path": os.path.abspath(path)}
-    if args.template_id:
-        data["template_id"] = args.template_id
-    resp = _post("/api/upload-template", data)
-    if resp.get("ok"):
-        tpl = resp.get("template", {})
-        print(f"✅ 模板已上传: {tpl.get('template_id', '?')}")
-        print(f"   文件: {tpl.get('filename', '?')}")
-        layouts = tpl.get("layouts", [])
-        print(f"   布局数: {len(layouts)}")
-        for l in layouts:
-            phs = ", ".join(f"{p['name']}(idx={p['idx']})" for p in l.get("placeholders", []))
-            print(f"     [{l['index']}] {l['name']} → {phs or '无占位符'}")
-        colors = tpl.get("colors", [])
-        if colors:
-            print(f"   主题色: {', '.join(colors[:6])}")
-        fonts = tpl.get("fonts", [])
-        if fonts:
-            print(f"   字体: {', '.join(fonts[:4])}")
-    else:
-        print(f"❌ 上传失败: {resp.get('error', '?')}")
-        sys.exit(1)
-
-
-def cmd_list_templates(args):
-    """List all uploaded templates."""
-    resp = _get("/api/templates")
-    templates = resp.get("templates", [])
-    if not templates:
-        print("📭 暂无上传模板")
-        return
-    print(f"📋 已上传 {len(templates)} 个模板:\n")
-    for t in templates:
-        colors = ", ".join(t.get("colors", [])[:3])
-        fonts = ", ".join(t.get("fonts", [])[:2])
-        print(f"  {t['template_id']}")
-        print(f"    文件: {t['filename']} | 布局: {t['layouts']}个 | 色: {colors} | 字体: {fonts}")
-
-
-def cmd_template_info(args):
-    """Show detailed template info."""
-    resp = _get(f"/api/template/{args.template_id}")
-    if not resp.get("ok"):
-        print(f"❌ {resp.get('error', 'Not found')}")
-        sys.exit(1)
-    tpl = resp["template"]
-    print(f"模板: {tpl['template_id']} ({tpl['filename']})")
-    print(f"尺寸: {tpl.get('slide_width', '?')}\" × {tpl.get('slide_height', '?')}\"")
-    for l in tpl.get("layouts", []):
-        phs = ", ".join(f"{p['name']}(idx={p['idx']}, {p['type']})" for p in l.get("placeholders", []))
-        print(f"  [{l['index']}] {l['name']}")
-        if phs:
-            print(f"       → {phs}")
-
-
-def cmd_generate(args):
-    """Generate PPTX from template + slide JSON."""
-    template_id = args.template_id
-    with open(args.file, "r", encoding="utf-8-sig") as f:
-        slides = json.load(f)
-    if isinstance(slides, dict) and "slides" in slides:
-        slides = slides["slides"]
-    resp = _post(f"/api/template/{template_id}/generate", {
-        "slides": slides,
-        "path": args.output or "",
-    })
-    if resp.get("ok"):
-        print(f"✅ 已生成: {resp.get('path', '?')}")
-    else:
-        print(f"❌ 生成失败: {resp.get('error', '?')}")
-        sys.exit(1)
-
-
-def cmd_clone_generate(args):
-    """Clone-generate PPTX from template + outline JSON."""
-    template_path = os.path.abspath(args.template)
-    if not os.path.exists(template_path):
-        print(f"❌ 模板文件不存在: {template_path}")
-        sys.exit(1)
-
-    with open(args.file, "r", encoding="utf-8-sig") as f:
-        outline = json.load(f)
-    if isinstance(outline, dict) and "outline" in outline:
-        outline = outline["outline"]
-
-    data = {
-        "template_path": template_path,
-        "outline": outline,
-        "path": args.output or "",
-    }
-    if args.content:
-        if os.path.exists(args.content):
-            with open(args.content, "r", encoding="utf-8-sig") as f:
-                data["source_content"] = f.read()
-        else:
-            data["source_content"] = args.content
-
-    resp = _post("/api/clone-generate", data)
-    if resp.get("ok"):
-        print(f"✅ 克隆生成完成: {resp.get('path', '?')} ({resp.get('count', '?')} 页)")
-    else:
-        print(f"❌ 克隆生成失败: {resp.get('error', '?')}")
-        sys.exit(1)
-
-
 def cmd_state(args):
     """Print current state as JSON."""
     state = _get("/api/state")
@@ -570,33 +459,6 @@ def main():
     p_get_tpl = sub.add_parser("get-template", help="Get a template's theme by ID")
     p_get_tpl.add_argument("template_id", help="Template ID")
 
-    # ── NEW: template upload & generation commands ──
-
-    # upload-template
-    p_upl = sub.add_parser("upload-template", help="Upload a .pptx template for generation")
-    p_upl.add_argument("file", help="Path to .pptx file")
-    p_upl.add_argument("--id", dest="template_id", help="Custom template ID (default: auto)")
-
-    # list-templates
-    sub.add_parser("list-templates", help="List all uploaded templates")
-
-    # template-info
-    p_tinfo = sub.add_parser("template-info", help="Show detailed template info")
-    p_tinfo.add_argument("template_id", help="Template ID")
-
-    # generate
-    p_gen = sub.add_parser("generate", help="Generate PPTX from template + slide JSON")
-    p_gen.add_argument("template_id", help="Template ID")
-    p_gen.add_argument("file", help="Path to slide JSON file")
-    p_gen.add_argument("-o", "--output", help="Output .pptx path")
-
-    # clone-generate
-    p_cgen = sub.add_parser("clone-generate", help="Clone-generate PPTX from template + outline JSON")
-    p_cgen.add_argument("template", help="Path to .pptx template file")
-    p_cgen.add_argument("file", help="Path to outline JSON file")
-    p_cgen.add_argument("-o", "--output", help="Output .pptx path")
-    p_cgen.add_argument("--content", help="Source content (text or file path)")
-
     args = parser.parse_args()
     _cfg["server"] = args.server
 
@@ -615,11 +477,6 @@ def main():
         "templates": cmd_templates,
         "parse-template": cmd_parse_template,
         "get-template": cmd_get_template,
-        "upload-template": cmd_upload_template,
-        "list-templates": cmd_list_templates,
-        "template-info": cmd_template_info,
-        "generate": cmd_generate,
-        "clone-generate": cmd_clone_generate,
     }[args.cmd](args)
 
 

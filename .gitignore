@@ -130,8 +130,6 @@ generate_group_fusion.py
 generate_ppt.py
 generate_slides.py
 generate_slides_detailed.py
-test_clone_generator.py
-test_clone_inducter.py
 test_generate.py
 claude-code-leak-impact.pptx
 push_slides.py

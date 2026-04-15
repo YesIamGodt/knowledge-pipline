@@ -17,8 +17,6 @@ from backend.ppt.models import Slide, OutlineItem, TemplateStyle, Presentation
 from backend.ppt.agents import PlannerAgent, GeneratorAgent, EditorAgent, CommandInterpreterAgent
 from backend.ppt.wiki_context import WikiContextProvider
 from backend.ppt.template_analyzer import TemplateAnalyzer
-from backend.ppt.clone_inducter import TemplateInducter, TemplateSpec
-from backend.ppt.clone_generator import CloneGenerator, clone_generate_pptx
 
 
 class PPTPipeline:
@@ -44,8 +42,6 @@ class PPTPipeline:
         self.wiki_dir = wiki_dir
         self.wiki_ctx = WikiContextProvider(wiki_dir)
         self.template_analyzer = TemplateAnalyzer()
-        self.clone_generator = CloneGenerator()
-        self._template_spec: Optional[TemplateSpec] = None
 
         # Agents are lazily created (they check config on each call)
         self._planner = None
@@ -101,53 +97,6 @@ class PPTPipeline:
     def analyze_template(self, pptx_path: str) -> TemplateStyle:
         """Analyze an uploaded PPTX template."""
         return self.template_analyzer.analyze(pptx_path)
-
-    def induct_template(self, pptx_path: str) -> TemplateSpec:
-        """Deep induction of a PPTX template for clone-based generation.
-        
-        Returns TemplateSpec with layouts, schemas, functional slides.
-        """
-        self._template_spec = self.clone_generator.induct_template(pptx_path)
-        return self._template_spec
-
-    def clone_generate(
-        self,
-        template_path: str,
-        outline: List[Dict[str, Any]],
-        output_path: str,
-        wiki_ids: Optional[List[str]] = None,
-    ) -> str:
-        """Generate PPTX by cloning template slides and replacing text.
-        
-        This is the clone-based generation mode that preserves all
-        visual formatting from the template (groups, images, decorations).
-        
-        Args:
-            template_path: Path to the PPTX template
-            outline: List of slide descriptions with purpose, topic, content
-            output_path: Where to save the result
-            wiki_ids: Optional wiki pages for source content
-            
-        Returns:
-            Path to the generated PPTX
-        """
-        # Gather wiki content if provided
-        source_content = ""
-        if wiki_ids:
-            wiki_contents, _ = self.wiki_ctx.gather(wiki_ids)
-            source_content = self.wiki_ctx.build_knowledge_text(wiki_contents)
-
-        # Run induction if not already cached for this template
-        if (self._template_spec is None or
-                self._template_spec.source_path != str(Path(template_path).absolute())):
-            self._template_spec = self.clone_generator.induct_template(template_path)
-
-        return self.clone_generator.generate(
-            spec=self._template_spec,
-            outline=outline,
-            output_path=output_path,
-            source_content=source_content,
-        )
 
     # ═══════════════════════════════════════════════════════════════
     #  LLM Config Check

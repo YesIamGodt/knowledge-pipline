@@ -505,43 +505,43 @@ background: linear-gradient(135deg, ${accent}, #fff);
 # ── HTML 预览模式 ──
 
 # 推送完整 PPT（从文件）— ✅ 推荐方式
-python demo/ppt_live/pptx_live.py push slides.json
+python ppt_live/pptx_live.py push slides.json
 
 # ❌ 绝对不要用 --inline 传含引号的 HTML！会因引号嵌套导致 shell 解析失败
-# python demo/ppt_live/pptx_live.py push --inline '[{"html": "..."}]'
+# python ppt_live/pptx_live.py push --inline '[{"html": "..."}]'
 
 # 编辑单页（替换整页 HTML）
-python demo/ppt_live/pptx_live.py edit 3 --html "<div style='width:960px;height:540px;...'>新内容</div>"
+python ppt_live/pptx_live.py edit 3 --html "<div style='width:960px;height:540px;...'>新内容</div>"
 
 # 删除 / 插入 / 交换
-python demo/ppt_live/pptx_live.py delete 4
-python demo/ppt_live/pptx_live.py insert 3 --html "<div style='width:960px;height:540px;...'>插入的页</div>"
-python demo/ppt_live/pptx_live.py swap 2 5
+python ppt_live/pptx_live.py delete 4
+python ppt_live/pptx_live.py insert 3 --html "<div style='width:960px;height:540px;...'>插入的页</div>"
+python ppt_live/pptx_live.py swap 2 5
 
 # 批量修改（主题色替换）
-python demo/ppt_live/pptx_live.py batch --theme-bg "#1a1a2e" --theme-accent "#e94560"
+python ppt_live/pptx_live.py batch --theme-bg "#1a1a2e" --theme-accent "#e94560"
 
 # 导航 / 状态 / 导出
-python demo/ppt_live/pptx_live.py goto 3
-python demo/ppt_live/pptx_live.py state
-python demo/ppt_live/pptx_live.py export output/演示.pptx
+python ppt_live/pptx_live.py goto 3
+python ppt_live/pptx_live.py state
+python ppt_live/pptx_live.py export output/演示.pptx
 
 # ── 模板模式（推荐 — 原生可编辑 PPTX）──
 
 # 上传 .pptx 模板
-python demo/ppt_live/pptx_live.py upload-template my-template.pptx
-python demo/ppt_live/pptx_live.py upload-template my-template.pptx --id custom-id
+python ppt_live/pptx_live.py upload-template my-template.pptx
+python ppt_live/pptx_live.py upload-template my-template.pptx --id custom-id
 
 # 查看模板
-python demo/ppt_live/pptx_live.py list-templates
-python demo/ppt_live/pptx_live.py template-info my-template
+python ppt_live/pptx_live.py list-templates
+python ppt_live/pptx_live.py template-info my-template
 
 # 从模板生成原生 PPTX
-python demo/ppt_live/pptx_live.py generate my-template slides.json -o output.pptx
+python ppt_live/pptx_live.py generate my-template slides.json -o output.pptx
 
 # 克隆模式生成（推荐复杂模板）
-python demo/ppt_live/pptx_live.py clone-generate template.pptx outline.json -o output.pptx
-python demo/ppt_live/pptx_live.py clone-generate template.pptx outline.json -o output.pptx --content source.md
+python ppt_live/pptx_live.py clone-generate template.pptx outline.json -o output.pptx
+python ppt_live/pptx_live.py clone-generate template.pptx outline.json -o output.pptx --content source.md
 ```
 
 **HTML 模式实际操作**：生成完整 PPT 时，**必须**先用 create_file 工具写 JSON 文件再 push：
@@ -550,7 +550,7 @@ python demo/ppt_live/pptx_live.py clone-generate template.pptx outline.json -o o
 
 ```python
 # ✅ 正确：用 create_file 工具写入 slides.json，然后在终端执行：
-# python demo/ppt_live/pptx_live.py push slides.json
+# python ppt_live/pptx_live.py push slides.json
 
 # ❌ 错误：不要把 HTML 放进 python -c 或 bash -c 命令
 ```
@@ -566,7 +566,7 @@ slides = [
 with open("slides.json", "w", encoding="utf-8") as f:
     json.dump(slides, f, ensure_ascii=False)
 
-# python demo/ppt_live/pptx_live.py generate my-template slides.json -o output.pptx
+# python ppt_live/pptx_live.py generate my-template slides.json -o output.pptx
 ```
 
 ---
@@ -704,8 +704,8 @@ with open("slides.json", "w", encoding="utf-8") as f:
 ### Step 1: 上传模板
 
 ```bash
-python demo/ppt_live/pptx_live.py upload-template my-template.pptx
-python demo/ppt_live/pptx_live.py upload-template my-template.pptx --id custom-id
+python ppt_live/pptx_live.py upload-template my-template.pptx
+python ppt_live/pptx_live.py upload-template my-template.pptx --id custom-id
 ```
 
 上传后输出模板的布局信息：
@@ -725,8 +725,8 @@ python demo/ppt_live/pptx_live.py upload-template my-template.pptx --id custom-i
 ### Step 2: 查看模板信息
 
 ```bash
-python demo/ppt_live/pptx_live.py list-templates     # 列出所有模板
-python demo/ppt_live/pptx_live.py template-info my-template  # 查看详情
+python ppt_live/pptx_live.py list-templates     # 列出所有模板
+python ppt_live/pptx_live.py template-info my-template  # 查看详情
 ```
 
 ### Step 3: 生成结构化 Slide JSON
@@ -769,7 +769,7 @@ LLM 根据模板布局信息生成 JSON。每个 slide 指定 `layout_index`（�
 ### Step 4: 生成 PPTX
 
 ```bash
-python demo/ppt_live/pptx_live.py generate my-template slides.json -o output.pptx
+python ppt_live/pptx_live.py generate my-template slides.json -o output.pptx
 ```
 
 ### 自动布局匹配

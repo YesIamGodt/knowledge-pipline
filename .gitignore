@@ -114,8 +114,7 @@ packages/create-data-pipeline/skill/backend/__pycache__/
 packages/create-data-pipeline/skill/backend/processors/__pycache__/
 tools/.env
 
-# Demo uploads
-demo/uploads/
+# Uploads
 uploads/
 
 # Temp files & build artifacts
@@ -140,3 +139,11 @@ package-lock.json
 
 # Generated slide output
 slides/
+
+# PPT backup/old files
+ppt_live/SKILL.old.md
+ppt_live/index_backup_*.html
+ppt_live/index_v*.html
+ppt_live/index_old.html
+ppt_live/index_canvas.html
+ppt_live/test_slides.json

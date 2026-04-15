@@ -5,7 +5,7 @@ Claude edits slides via python-pptx → pushes JSON via HTTP → browser updates
 No React, no Fabric.js, no build step. Just Flask + SSE + static HTML.
 
 Usage:
-    python demo/ppt_live/server.py [--port 5679] [--open]
+    python ppt_live/server.py [--port 5679] [--open]
 
 API:
     POST /api/push       Push slides JSON → SSE broadcast to all browsers

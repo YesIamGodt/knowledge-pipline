@@ -6,25 +6,25 @@ It pushes slide JSON to the preview server via HTTP POST.
 
 Usage (from Claude Code terminal):
     # Push all slides
-    python demo/ppt_live/pptx_live.py push slides.json
+    python ppt_live/pptx_live.py push slides.json
 
     # Push inline JSON
-    python demo/ppt_live/pptx_live.py push --inline '[{"type":"title","title":"Hello"}]'
+    python ppt_live/pptx_live.py push --inline '[{"type":"title","title":"Hello"}]'
 
     # Navigate to slide
-    python demo/ppt_live/pptx_live.py goto 3
+    python ppt_live/pptx_live.py goto 3
 
     # Export to PPTX
-    python demo/ppt_live/pptx_live.py export output/my.pptx
+    python ppt_live/pptx_live.py export output/my.pptx
 
     # Create + push (one-shot: generate from template)
-    python demo/ppt_live/pptx_live.py create --title "AI安全" --pages 6
+    python ppt_live/pptx_live.py create --title "AI安全" --pages 6
 
     # Edit a specific slide
-    python demo/ppt_live/pptx_live.py edit 3 --title "新标题" --items "要点1" "要点2"
+    python ppt_live/pptx_live.py edit 3 --title "新标题" --items "要点1" "要点2"
 
     # Batch: set all slides' badge
-    python demo/ppt_live/pptx_live.py batch --badge "Company Logo"
+    python ppt_live/pptx_live.py batch --badge "Company Logo"
 """
 
 import argparse
@@ -50,7 +50,7 @@ def _post(path, data):
             return json.loads(resp.read())
     except urllib.error.URLError as e:
         print(f"❌ 无法连接到预览服务器 ({url}): {e}", file=sys.stderr)
-        print("请先启动: python demo/ppt_live/server.py --open", file=sys.stderr)
+        print("请先启动: python ppt_live/server.py --open", file=sys.stderr)
         sys.exit(1)
 
 

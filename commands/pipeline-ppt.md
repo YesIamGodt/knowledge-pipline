@@ -47,7 +47,7 @@ python "SKILL_DIR/demo/ppt_live/server.py"
 - 等待看到 `LivePPT Preview Server` 输出后继续
 - 如果启动失败，告诉用户手动在终端执行此命令，但**不要跳过**
 
-### 第四步：交互式三步选择（严格顺序，逐步提问）
+### 第四步：交互式三步选择（严格顺序，逐步提问，全程中文）
 
 在服务器启动的同时，用 Agent 工具准备数据，然后**按顺序**逐步与用户交互。
 
@@ -56,7 +56,7 @@ python "SKILL_DIR/demo/ppt_live/server.py"
 **在终端运行以下命令**，按目录结构列出 `SKILL_DIR/wiki/` 下所有 .md 文件并编号：
 
 ```powershell
-$wiki = "SKILL_DIR\wiki"; $n=1; foreach ($sub in @("sources","entities","concepts","syntheses")) { $dir="$wiki\$sub"; if (Test-Path $dir) { Write-Host "── $sub ──"; Get-ChildItem $dir -Filter "*.md" | Sort-Object Name | ForEach-Object { Write-Host "  $n. $($_.Name)"; $n++ } } }
+$wiki = "SKILL_DIR\wiki"; $n=1; foreach ($sub in @("sources","entities","concepts","syntheses")) { $dir="$wiki\$sub"; if (Test-Path $dir) { Write-Host "── $sub ──"; Get-ChildItem $dir -Filter "*.md" | Sort-Object Name | ForEach-Object { Write-Host "  $n. $sub/$($_.Name)"; $n++ } } }
 ```
 
 （将 `SKILL_DIR` 替换为第一步得到的实际路径）
@@ -64,15 +64,15 @@ $wiki = "SKILL_DIR\wiki"; $n=1; foreach ($sub in @("sources","entities","concept
 输出示例：
 ```
 ── sources ──
-  1. claude-code-leak.md
-  2. demo-example.md
+  1. sources/claude-code-leak.md
+  2. sources/demo-example.md
 ── entities ──
-  3. OpenAI.md
+  3. entities/OpenAI.md
 ── concepts ──
-  4. RAG.md
-  5. ReinforcementLearning.md
+  4. concepts/RAG.md
+  5. concepts/ReinforcementLearning.md
 ── syntheses ──
-  6. analysis-2024.md
+  6. syntheses/analysis-2024.md
 ```
 
 如果 wiki 下没有任何 .md 文件，提示用户先运行 `/pipeline-ingest` 摄入文档，**立即停止**。
@@ -88,8 +88,8 @@ $wiki = "SKILL_DIR\wiki"; $n=1; foreach ($sub in @("sources","entities","concept
 将终端输出的每个编号文件作为独立 option，格式为 `编号. 目录/文件名`：
 
 ```
-📂 请选择 PPT 素材文档（必选，可多选）
-选择后将读取对应文件的完整内容作为 PPT 素材。
+📂 请选择 PPT 素材文档编号（必选，可多选）
+请直接勾选编号；选择后将读取对应文件的完整内容作为 PPT 素材。
 
 options:
   1. sources/claude-code-leak.md
@@ -103,8 +103,15 @@ options:
 **规则：**
 - 用户必须从列表中**选择具体编号**，至少选 1 个
 - **禁止** Claude 替用户决定选哪些、跳过选择、或聚合分组后让用户选"主题"
+- **禁止**把 options 做成“安全类/技术类/分析类/产品类”等分类入口；options 只能是一条条原始 md 文件
 - options 数组必须与终端输出的编号文件一一对应，一行一个
 - 用户选择后，用 `read_file` 完整读取每个选中文件的内容，作为第五步的 PPT 素材
+
+#### 交互语言硬约束（必须遵守）
+
+- 从第 ① 步到导出提示，**所有交互文案必须是中文**
+- AskUserQuestion 的标题、问题、选项、错误提示、确认提示都必须是中文
+- 不得出现英文交互文案（文件路径与命令本身除外）
 
 ---
 
@@ -309,6 +316,8 @@ HTML 含引号，**绝对不要**嵌入 `python -c "..."` 等 shell 命令！
 2. **服务器必须启动** — 实时预览 + CLI 推送都依赖它
 3. **三步严格交互** — ① 必选 wiki 文档 ② 描述需求 ③ 必选模板编号，按顺序逐步提问
 4. **选项受限** — 第 ① ③ 步禁止自由输入（`allowFreeformInput: false`），只能从选项中选择
-5. **上传模板触发子流程** — 识别完毕后回到第 ① 步重新选择，第 ③ 步会多出第 9 个选项
-6. **不写临时 Python 脚本** — 只用 `create_file` 写 JSON + CLI 推送
-7. **绝不嵌入 HTML 到 shell** — 先写 JSON 文件，再 push 文件路径
+5. **第①步只能原始文件编号多选** — options 仅允许 `编号. 子目录/文件名.md`，严禁“素材分类/聚类”选项
+6. **全程中文交互** — 用户可见的提问与提示必须全部中文
+7. **上传模板触发子流程** — 识别完毕后回到第 ① 步重新选择，第 ③ 步会多出第 9 个选项
+8. **不写临时 Python 脚本** — 只用 `create_file` 写 JSON + CLI 推送
+9. **绝不嵌入 HTML 到 shell** — 先写 JSON 文件，再 push 文件路径

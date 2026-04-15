@@ -1,0 +1,138 @@
+[
+  {
+    "id": "dark-tech",
+    "name": "深色科技",
+    "description": "暗色背景 + 蓝色强调，适合技术/AI/安全类主题",
+    "preview": "🌑",
+    "theme": {
+      "bg": "#0f1318",
+      "title": "#ffffff",
+      "body": "#c9d1d9",
+      "accent": "#58a6ff",
+      "muted": "#8b949e",
+      "badge": "#58a6ff",
+      "badgeBg": "#58a6ff22",
+      "accentDim": "#58a6ff"
+    },
+    "fonts": { "title": "Arial Black", "body": "Arial" }
+  },
+  {
+    "id": "midnight-exec",
+    "name": "午夜商务",
+    "description": "深海蓝 + 冰蓝高级感，适合咨询/报告/金融类",
+    "preview": "🌊",
+    "theme": {
+      "bg": "#1E2761",
+      "title": "#ffffff",
+      "body": "#CADCFC",
+      "accent": "#CADCFC",
+      "muted": "#8899bb",
+      "badge": "#ffffff",
+      "badgeBg": "#CADCFC22",
+      "accentDim": "#CADCFC"
+    },
+    "fonts": { "title": "Georgia", "body": "Calibri" }
+  },
+  {
+    "id": "coral-energy",
+    "name": "活力珊瑚",
+    "description": "珊瑚红 + 金色，适合营销/品牌/创意类",
+    "preview": "🪸",
+    "theme": {
+      "bg": "#2F3C7E",
+      "title": "#F9E795",
+      "body": "#f0f0f0",
+      "accent": "#F96167",
+      "muted": "#b0b8d0",
+      "badge": "#F96167",
+      "badgeBg": "#F9616722",
+      "accentDim": "#F96167"
+    },
+    "fonts": { "title": "Trebuchet MS", "body": "Calibri" }
+  },
+  {
+    "id": "forest-moss",
+    "name": "森林苔藓",
+    "description": "森林绿 + 苔绿，适合环保/健康/教育类",
+    "preview": "🌿",
+    "theme": {
+      "bg": "#1a2e1a",
+      "title": "#ffffff",
+      "body": "#d4e8c2",
+      "accent": "#97BC62",
+      "muted": "#8aaa78",
+      "badge": "#97BC62",
+      "badgeBg": "#97BC6222",
+      "accentDim": "#97BC62"
+    },
+    "fonts": { "title": "Cambria", "body": "Calibri" }
+  },
+  {
+    "id": "warm-terra",
+    "name": "暖色陶土",
+    "description": "赤陶色 + 沙色，适合人文/历史/社科类",
+    "preview": "🏺",
+    "theme": {
+      "bg": "#2a1f1a",
+      "title": "#ffffff",
+      "body": "#E7E8D1",
+      "accent": "#B85042",
+      "muted": "#A7BEAE",
+      "badge": "#B85042",
+      "badgeBg": "#B8504222",
+      "accentDim": "#B85042"
+    },
+    "fonts": { "title": "Palatino", "body": "Garamond" }
+  },
+  {
+    "id": "light-minimal",
+    "name": "极简浅色",
+    "description": "白色干净底 + 深灰文字，适合日常/通用/简约风",
+    "preview": "⬜",
+    "theme": {
+      "bg": "#f8f9fa",
+      "title": "#212529",
+      "body": "#495057",
+      "accent": "#0d6efd",
+      "muted": "#6c757d",
+      "badge": "#0d6efd",
+      "badgeBg": "#0d6efd18",
+      "accentDim": "#0d6efd"
+    },
+    "fonts": { "title": "Calibri", "body": "Calibri Light" }
+  },
+  {
+    "id": "berry-cream",
+    "name": "莓果奶油",
+    "description": "浆果紫 + 奶油色，适合时尚/美妆/生活方式类",
+    "preview": "🫐",
+    "theme": {
+      "bg": "#2a1526",
+      "title": "#ECE2D0",
+      "body": "#d4c0c0",
+      "accent": "#A26769",
+      "muted": "#8a7a7a",
+      "badge": "#A26769",
+      "badgeBg": "#A2676922",
+      "accentDim": "#A26769"
+    },
+    "fonts": { "title": "Georgia", "body": "Calibri" }
+  },
+  {
+    "id": "cherry-bold",
+    "name": "樱桃大胆",
+    "description": "樱桃红 + 纯白，适合强冲击力/发布会/年报类",
+    "preview": "🍒",
+    "theme": {
+      "bg": "#121420",
+      "title": "#FCF6F5",
+      "body": "#e0dada",
+      "accent": "#990011",
+      "muted": "#8888aa",
+      "badge": "#990011",
+      "badgeBg": "#99001122",
+      "accentDim": "#990011"
+    },
+    "fonts": { "title": "Impact", "body": "Arial" }
+  }
+]

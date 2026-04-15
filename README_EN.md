@@ -93,6 +93,23 @@ You don't want your data sent to Google's or OpenAI's servers. You need to choos
 - **Traditional RAG** = search engine, searches through fragments
 - **Knowledge Pipeline** = knowledge compiler, compiles documents into a reasoning-ready knowledge system
 
+### vs AI PPT Tools (Gemini / GPT / Gamma / Beautiful.ai)
+
+> Why a separate comparison? Because "AI-powered slides" is one of the hottest AI use cases, but existing tools are **solving the wrong problem** — they compete on who has prettier templates, not who delivers deeper insights.
+
+| | Gemini / GPT / Gamma etc. | Knowledge Pipeline LivePPT |
+|---|---|---|
+| 📄 Content source | A one-line user prompt | **Knowledge base: multiple docs → entity network → concept graph** |
+| 🧠 Analysis depth | Model's generic knowledge, surface-level | **Real data & insights from YOUR documents** |
+| ⚠️ Contradiction handling | Unaware, may self-contradict | **Auto-detects cross-source contradictions** |
+| 📖 Source tracing | No attribution | **Every slide cites Wiki source pages** |
+| ✏️ Editing | Regenerate entire deck | **Natural language per-slide live editing** |
+| 📤 Export | PDF / images (not editable) | **PPTX (editable text boxes + HD background)** |
+| 🎨 Templates | Platform-fixed templates | **8 built-in + upload company templates to clone** |
+| 💰 Cost | $20–40/mo subscription | **Free & open source, use your own LLM** |
+
+**AI PPT tools give you "pretty slides". Knowledge Pipeline gives you "insightful analysis reports".**
+
 ---
 
 ## 🎯 Core Value in 30 Seconds
@@ -280,21 +297,28 @@ Generates a self-contained `graph.html` — open in browser to interactively exp
 - Edges distinguish explicit links from inferred relationships
 - Search and zoom support
 
-### 📑 Live PPT — Knowledge-Driven Presentations
+### 📑 Live PPT — Knowledge-Driven Presentations (🚀 Flagship Feature)
+
+> **Problem**: Gemini, GPT, Gamma can generate pretty slides. But throw a 200-page audit report at them? They'll give you generic fluff. They don't *understand* your documents — they're just stitching together the model's general knowledge.
+>
+> **Solution**: `/pipeline-ppt` doesn't take a prompt as input — it takes your **entire knowledge base**. 18 documents compiled into entity networks, concept relationships, contradiction detection results — all become the content source for your slides.
 
 ```
 /pipeline-ppt "AI Security Analysis"
-/pipeline-ppt "Competitive Analysis" --theme apple --pages 10
+/pipeline-ppt "Competitive Analysis" --template 3 --pages 10
 ```
 
-**Turn your Wiki knowledge base into an interactive PPT with one command**:
-- 🧠 **LLM-powered layout** — Auto-extracts key points, plans slide structure
-- 🎨 **5 theme presets** — Dark / Light / Apple / Warm / Minimal, one-click switch
-- 📖 **Source attribution** — Every slide footer shows the Wiki source page
+**Core capabilities**:
+- 🧠 **Knowledge-base driven** — Extracts key points from wiki entities/concepts/contradictions, not generic model knowledge
+- 🎨 **8 built-in templates** — Business, tech, academic scenarios covered, one-click selection
+- 📤 **PPTX export** — One-click browser export with editable text (not screenshots)
+- ✏️ **Natural language editing** — "Add a competitor comparison table to slide 3", live update without breaking other slides
+- 📖 **Source tracing** — Every slide attributes its knowledge source, audit-ready
+- 🎭 **Template clone** — Upload your company's PPT template, AI learns its colors and layout to generate new content
+- 📐 **Smart layout** — Auto-scales when content overflows, never clips or truncates
 - ⌨️ **Keyboard navigation** — ←→ navigate · F fullscreen · Home/End
-- 📄 **Self-contained HTML** — One file, share with anyone
 
-> No more spending 2 hours making slides. Just say "make a security analysis PPT from these knowledge pages".
+> Others use AI to make "pretty slides". You use Knowledge Pipeline to make "insightful analysis reports".
 
 ---
 

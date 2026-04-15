@@ -12,6 +12,9 @@ from pathlib import Path
 from flask import Flask, Response, stream_with_context, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 
+import re
+import tempfile
+
 # 添加项目根目录到 Python 路径
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
@@ -25,9 +28,14 @@ app = Flask(__name__)
 CORS(app, origins=['http://localhost:3000', 'http://localhost:5678'], supports_credentials=True)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
+# Directories
+UPLOAD_DIR = project_root / 'uploads' / 'templates'
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
 # 全局状态管理器
 state_manager = GenerationStateManager()
 pipeline = None
+custom_templates = []  # Parsed custom templates from uploaded PPTX
 
 def init_pipeline():
     """初始化 pipeline"""
@@ -105,16 +113,16 @@ def generate():
         """SSE 事件流"""
         try:
             # Send job_id FIRST so frontend can pause/resume
-            yield f"data: {json.dumps({'type': 'job_id', 'job_id': job_id})}\n\n"
+            yield f"data: {json.dumps({'type': 'job_id', 'job_id': job_id}, ensure_ascii=False)}\n\n"
 
             for event in pipeline.generate(
                 wiki_ids=wiki_ids,
                 instruction=instruction,
                 template_style=template_layouts[0] if template_layouts else None,
-                should_stop=lambda: state_manager.get_state(job_id).status == 'paused'
+                should_stop=lambda: (state_manager.get_state(job_id) or type('', (), {'status': 'generating'})).status == 'paused'
             ):
                 # 发送 SSE 事件
-                yield f"data: {json.dumps(event)}\n\n"
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
 
                 # 如果完成或错误，退出
                 if event.get('type') in ['done', 'error', 'stopped']:
@@ -123,7 +131,7 @@ def generate():
             # 客户端断开连接
             pass
         except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
 
     return Response(
         stream_with_context(event_stream()),
@@ -151,6 +159,116 @@ def resume_generation():
     state_manager.resume(job_id, user_edits)
     return jsonify({'status': 'resumed', 'job_id': job_id})
 
+@app.route('/api/edit', methods=['POST'])
+def edit_slide():
+    """编辑单页幻灯片（SSE流式输出）"""
+    if pipeline is None:
+        return jsonify({'error': 'Pipeline not initialized'}), 500
+
+    data = request.json
+    slide_dict = data.get('slide', {})
+    instruction = data.get('instruction', '')
+    page_index = data.get('page_index', 0)
+    context = data.get('context', '')
+
+    if not slide_dict:
+        return jsonify({'error': 'Missing slide data'}), 400
+
+    if not instruction:
+        return jsonify({'error': 'Missing instruction'}), 400
+
+    def event_stream():
+        """SSE 事件流"""
+        try:
+            for event in pipeline.edit_slide(
+                slide_dict=slide_dict,
+                instruction=instruction,
+                page_index=page_index,
+                context=context
+            ):
+                yield f"data: {json.dumps(event)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+    return Response(
+        event_stream(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+
+
+@app.route('/api/command/interpret', methods=['POST'])
+def interpret_command():
+    """Interpret textbox input into a structured PPT action using current context."""
+    if pipeline is None:
+        return jsonify({'error': 'Pipeline not initialized'}), 500
+
+    data = request.json or {}
+    instruction = data.get('instruction', '').strip()
+    slides = data.get('slides', [])
+    current_slide_index = data.get('current_slide_index', 0)
+    can_continue_generation = data.get('can_continue_generation', False)
+    generation_status = data.get('generation_status', 'idle')
+    last_generation_instruction = data.get('last_generation_instruction', '')
+
+    if not instruction:
+        return jsonify({'error': 'instruction is required'}), 400
+
+    try:
+        result = pipeline.interpret_command(
+            instruction=instruction,
+            slides=slides,
+            current_slide_index=current_slide_index,
+            can_continue_generation=can_continue_generation,
+            generation_status=generation_status,
+            last_generation_instruction=last_generation_instruction,
+        )
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/continue', methods=['POST'])
+def continue_generation():
+    """Continue an interrupted PPT generation from existing slides."""
+    if pipeline is None:
+        return jsonify({'error': 'Pipeline not initialized'}), 500
+
+    data = request.json or {}
+    wiki_ids = data.get('wiki_ids', [])
+    original_instruction = data.get('original_instruction', '')
+    continue_instruction = data.get('instruction', '继续')
+    existing_slides = data.get('existing_slides', [])
+
+    if not existing_slides:
+        return jsonify({'error': 'Missing existing slides'}), 400
+    if not original_instruction:
+        return jsonify({'error': 'Missing original instruction'}), 400
+
+    def event_stream():
+        try:
+            for event in pipeline.continue_generation(
+                wiki_ids=wiki_ids,
+                original_instruction=original_instruction,
+                continue_instruction=continue_instruction,
+                existing_slides=existing_slides,
+            ):
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
+
+    return Response(
+        stream_with_context(event_stream()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+
 @app.route('/api/export', methods=['POST'])
 def export_pptx():
     """导出 PPTX"""
@@ -172,7 +290,7 @@ def export_pptx():
         with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
             output_path = tmp.name
 
-        exporter.export({'slides': slides, 'title': title}, output_path)
+        exporter.export(slides, output_path, title=title)
 
         response = send_file(
             output_path,
@@ -191,6 +309,72 @@ def export_pptx():
         return response
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# ── Template API ────────────────────────────────────────────
+
+@app.route('/api/templates')
+def list_templates():
+    """List custom templates parsed from uploaded PPTX files."""
+    return jsonify({'templates': custom_templates})
+
+
+@app.route('/api/templates/upload', methods=['POST'])
+def upload_template():
+    """Upload a PPTX file and parse it as a template."""
+    if 'file' not in request.files:
+        return jsonify({'error': '未提供文件'}), 400
+
+    file = request.files['file']
+    if not file.filename:
+        return jsonify({'error': '文件名为空'}), 400
+
+    # Validate extension
+    if not file.filename.lower().endswith('.pptx'):
+        return jsonify({'error': '仅支持 .pptx 文件'}), 400
+
+    # Sanitize filename
+    safe_name = re.sub(r'[^\w\-.]', '_', file.filename)
+    save_path = UPLOAD_DIR / safe_name
+
+    try:
+        file.save(str(save_path))
+
+        # Parse template
+        from backend.ppt.template_analyzer import TemplateAnalyzer
+        analyzer = TemplateAnalyzer()
+        style = analyzer.analyze(str(save_path))
+
+        # Build template entry
+        colors = style.colors if style.colors else ['#0f1318', '#ffffff', '#c9d1d9', '#58a6ff']
+        tpl_id = f'custom-{uuid.uuid4().hex[:8]}'
+        template = {
+            'id': tpl_id,
+            'name': Path(safe_name).stem.replace('_', ' ')[:20],
+            'description': style.description or f'从 {file.filename} 解析',
+            'preview': f'linear-gradient(135deg, {colors[0]} 0%, {colors[min(1, len(colors)-1)]} 50%, {colors[min(2, len(colors)-1)]} 100%)',
+            'theme': {
+                'bg': colors[0] if len(colors) > 0 else '#0f1318',
+                'title': colors[1] if len(colors) > 1 else '#e6edf3',
+                'body': colors[2] if len(colors) > 2 else '#c9d1d9',
+                'accent': colors[3] if len(colors) > 3 else '#58a6ff',
+            },
+            'isCustom': True,
+            'fonts': style.fonts if style.fonts else [],
+            'source_file': safe_name,
+        }
+
+        custom_templates.append(template)
+        print(f"  ✓ Template parsed: {template['name']} ({len(colors)} colors, {len(style.fonts or [])} fonts)")
+
+        return jsonify({'template': template})
+
+    except Exception as e:
+        # Clean up on failure
+        if save_path.exists():
+            save_path.unlink()
+        return jsonify({'error': f'模板解析失败: {str(e)}'}), 500
+
 
 def start_server(port=5678, open_browser=True):
     """启动服务器"""

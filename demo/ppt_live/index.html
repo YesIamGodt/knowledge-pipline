@@ -1,0 +1,991 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LivePPT Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs/dist/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root {
+  --font: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+  --bg: #0a0e14;
+  --surface: #12161e;
+  --surface2: #1a1f2b;
+  --border: #252b37;
+  --border-hover: #3d4555;
+  --text: #e2e8f0;
+  --text-muted: #64748b;
+  --accent: #3b82f6;
+  --accent-dim: rgba(59,130,246,0.12);
+  --accent-glow: rgba(59,130,246,0.3);
+  --success: #22c55e;
+  --warn: #f59e0b;
+  --radius: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 200px; background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0; transition: width var(--transition);
+}
+.sidebar-header {
+  padding: 16px 14px 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sidebar-header h3 { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-count { font-size: 11px; background: var(--accent-dim); color: var(--accent); padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+.sidebar-slides {
+  flex: 1; overflow-y: auto; padding: 10px 8px; scroll-behavior: smooth;
+}
+.sidebar-slides::-webkit-scrollbar { width: 4px; }
+.sidebar-slides::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-slides::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+.thumb {
+  position: relative; border: 2px solid transparent; border-radius: 8px; cursor: pointer;
+  margin-bottom: 10px; overflow: hidden; aspect-ratio: 16/9; transition: all var(--transition);
+  background: var(--surface2);
+}
+.thumb::after {
+  content: ''; position: absolute; inset: 0; background: transparent; transition: background var(--transition); pointer-events: none; border-radius: 6px;
+}
+.thumb:hover::after { background: rgba(59,130,246,0.05); }
+.thumb.active {
+  border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow), 0 4px 16px rgba(59,130,246,0.15);
+}
+.thumb:hover:not(.active) { border-color: var(--border-hover); transform: scale(1.02); }
+.thumb-num {
+  position: absolute; top: 5px; left: 7px; font-size: 10px; font-weight: 700;
+  color: #fff; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  border-radius: 4px; padding: 1px 6px; z-index: 10; letter-spacing: 0.3px;
+}
+.thumb-inner { width: 960px; height: 540px; transform-origin: 0 0; pointer-events: none; overflow: hidden; }
+.thumb.new-slide { animation: slideIn 0.4s ease-out; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ── Main Area ── */
+.main { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+
+/* Toolbar */
+.toolbar {
+  position: absolute; top: 0; left: 0; right: 0; height: 52px; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+  background: linear-gradient(to bottom, var(--bg), transparent);
+}
+.toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 6px; }
+.toolbar button {
+  background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 500; cursor: pointer;
+  font-family: var(--font); display: flex; align-items: center; gap: 5px; transition: all var(--transition);
+  white-space: nowrap;
+}
+.toolbar button:hover { background: var(--surface); border-color: var(--accent); color: var(--text); }
+.toolbar button:active { transform: scale(0.97); }
+.toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+.toolbar button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.toolbar button.primary:hover { background: #2563eb; box-shadow: 0 2px 12px var(--accent-glow); }
+.toolbar button.exporting { background: var(--accent); border-color: var(--accent); color: #fff; animation: exportPulse 1.5s infinite; }
+@keyframes exportPulse { 0%,100% { box-shadow: 0 0 0 0 var(--accent-glow); } 50% { box-shadow: 0 0 0 6px transparent; } }
+
+/* Status */
+.status-bar {
+  position: absolute; top: 14px; right: 20px; display: flex; align-items: center; gap: 8px; z-index: 100;
+}
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); transition: background var(--transition); }
+.status-dot.disconnected { background: #ef4444; }
+.status-dot.connected { animation: statusPulse 2.5s ease-in-out infinite; }
+@keyframes statusPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.status-text { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+/* Slide Display Area */
+.slide-area {
+  flex: 1; display: flex; align-items: center; justify-content: center; position: relative;
+  padding: 60px 30px 50px;
+}
+
+.slide-container {
+  position: relative; border-radius: var(--radius); overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide-container:hover { box-shadow: 0 24px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08); }
+
+.slide-frame { width: 960px; height: 540px; transform-origin: 0 0; overflow: hidden; position: relative; }
+
+/* Slide transition animation */
+.slide-frame.entering { animation: slideEnter 0.35s ease-out; }
+.slide-frame.entering-right { animation: slideEnterRight 0.35s ease-out; }
+.slide-frame.entering-left { animation: slideEnterLeft 0.35s ease-out; }
+@keyframes slideEnter { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideEnterRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideEnterLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+
+/* Navigation arrows */
+.nav-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 50;
+  width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); color: var(--text-muted);
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition); opacity: 0;
+}
+.main:hover .nav-arrow { opacity: 1; }
+.nav-arrow:hover { background: rgba(255,255,255,0.12); color: var(--text); transform: translateY(-50%) scale(1.08); }
+.nav-arrow:active { transform: translateY(-50%) scale(0.95); }
+.nav-arrow.left { left: 16px; }
+.nav-arrow.right { right: 16px; }
+.nav-arrow:disabled { opacity: 0 !important; cursor: default; }
+
+/* Progress bar */
+.progress-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  background: linear-gradient(to top, var(--bg), transparent);
+  padding: 0 30px; z-index: 100;
+}
+.progress-dots { display: flex; gap: 6px; align-items: center; }
+.progress-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--border);
+  cursor: pointer; transition: all var(--transition);
+}
+.progress-dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
+.progress-dot:hover:not(.active) { background: var(--border-hover); transform: scale(1.3); }
+.page-counter { font-size: 12px; color: var(--text-muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* ── Waiting State ── */
+.waiting {
+  display: flex; flex-direction: column; align-items: center; gap: 20px; color: var(--text-muted);
+  animation: waitFadeIn 0.6s ease-out;
+}
+@keyframes waitFadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.waiting-visual {
+  width: 120px; height: 80px; border-radius: 8px; border: 2px dashed var(--border);
+  display: flex; align-items: center; justify-content: center; position: relative;
+  animation: waitFloat 3s ease-in-out infinite;
+}
+@keyframes waitFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.waiting-visual::before {
+  content: ''; position: absolute; inset: -4px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-dim), transparent, var(--accent-dim));
+  animation: waitGlow 4s linear infinite; z-index: -1;
+}
+@keyframes waitGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.waiting-visual .icon { font-size: 36px; }
+.waiting h2 { font-weight: 500; font-size: 18px; color: var(--text); }
+.waiting p { font-size: 13px; max-width: 400px; text-align: center; line-height: 1.7; color: var(--text-muted); }
+.waiting code {
+  background: var(--surface2); padding: 3px 10px; border-radius: 6px; font-size: 12px;
+  color: var(--accent); border: 1px solid var(--border); font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.waiting .shortcuts {
+  display: flex; gap: 8px; margin-top: 8px;
+}
+.waiting .shortcut-key {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;
+}
+.waiting .shortcut-key kbd {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 3px;
+  padding: 1px 5px; font-size: 10px; font-family: var(--font);
+}
+
+/* ── Fullscreen / Presentation Mode ── */
+.fullscreen-overlay {
+  position: fixed; inset: 0; background: #000; z-index: 10000; display: none;
+  align-items: center; justify-content: center; cursor: none;
+}
+.fullscreen-overlay.active { display: flex; }
+.fullscreen-overlay .slide-frame { cursor: none; }
+.fullscreen-overlay .fs-page {
+  position: fixed; bottom: 20px; right: 30px; font-size: 14px; color: rgba(255,255,255,0.3);
+  font-family: var(--font); z-index: 10001; transition: opacity 0.3s; pointer-events: none;
+}
+.fullscreen-overlay .fs-controls {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; opacity: 0; transition: opacity 0.3s; z-index: 10001;
+}
+.fullscreen-overlay:hover .fs-controls { opacity: 1; }
+.fullscreen-overlay .fs-controls button {
+  background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 6px;
+  padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: var(--font);
+}
+.fullscreen-overlay .fs-controls button:hover { background: rgba(255,255,255,0.2); }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--surface2); color: var(--text); padding: 10px 20px;
+  border-radius: 10px; font-size: 13px; z-index: 9999; opacity: 0;
+  transition: all 0.3s ease; pointer-events: none; border: 1px solid var(--border);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3); backdrop-filter: blur(12px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Generation Progress ── */
+.gen-progress {
+  position: absolute; top: 52px; left: 0; right: 0; height: 2px; z-index: 200;
+  background: var(--border); overflow: hidden; opacity: 0; transition: opacity 0.3s;
+}
+.gen-progress.active { opacity: 1; }
+.gen-progress-bar {
+  height: 100%; background: linear-gradient(90deg, var(--accent), #8b5cf6, var(--accent));
+  background-size: 200% 100%; animation: genProgressShimmer 2s linear infinite;
+  transition: width 0.5s ease;
+}
+@keyframes genProgressShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Offscreen */
+#offscreen { position: fixed; left: -9999px; top: 0; width: 960px; height: 540px; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3>Slides</h3>
+    <span class="sidebar-count" id="slideCount">0</span>
+  </div>
+  <div class="sidebar-slides" id="sidebarSlides"></div>
+</div>
+
+<!-- Main -->
+<div class="main" id="main">
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar" style="display:none;">
+    <div class="toolbar-left">
+      <button onclick="exportPptx()" id="btnExport">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        导出 PPTX
+      </button>
+      <button onclick="enterPresentation()" id="btnPresent">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        演示
+      </button>
+    </div>
+    <div class="toolbar-right">
+      <div class="status-bar">
+        <div class="status-dot connected" id="statusDot"></div>
+        <span class="status-text" id="statusText">已连接</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generation progress -->
+  <div class="gen-progress" id="genProgress"><div class="gen-progress-bar" id="genProgressBar" style="width:0%"></div></div>
+
+  <!-- Slide area -->
+  <div class="slide-area" id="slideArea">
+    <!-- Navigation arrows -->
+    <button class="nav-arrow left" id="navLeft" onclick="navigate(-1)">&#9664;</button>
+    <button class="nav-arrow right" id="navRight" onclick="navigate(1)">&#9654;</button>
+
+    <!-- Waiting state -->
+    <div class="waiting" id="waiting">
+      <div class="waiting-visual"><div class="icon">&#127912;</div></div>
+      <h2>LivePPT</h2>
+      <p>AI 驱动的实时演示文稿创作。在终端输入自然语言指令，PPT 将在这里实时渲染。</p>
+      <p>例如：<code>帮我做一个关于 AI 安全的 PPT，8 页</code></p>
+      <div class="shortcuts">
+        <span class="shortcut-key"><kbd>&#8592;</kbd><kbd>&#8594;</kbd> 翻页</span>
+        <span class="shortcut-key"><kbd>F</kbd> 演示模式</span>
+        <span class="shortcut-key"><kbd>Esc</kbd> 退出</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-bar" id="progressBar" style="display:none;">
+    <div class="progress-dots" id="progressDots"></div>
+    <span class="page-counter" id="pageCounter"></span>
+  </div>
+</div>
+
+<!-- Fullscreen presentation mode -->
+<div class="fullscreen-overlay" id="fsOverlay">
+  <div class="slide-frame" id="fsSlide"></div>
+  <div class="fs-page" id="fsPage"></div>
+  <div class="fs-controls">
+    <button onclick="exitPresentation()">Esc 退出</button>
+  </div>
+</div>
+
+<div id="offscreen"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/*  LivePPT v7 — Enhanced UX with transitions, presentation mode, and live progress
+    
+    Architecture:
+    - LLM generates each slide as self-contained HTML (960x540 div)
+    - Server pushes via SSE → browser renders with smooth transitions
+    - Export: html2canvas captures each slide → PptxGenJS builds editable PPTX
+*/
+
+const SLIDE_W = 960, SLIDE_H = 540;
+const PPTX_W = 10, PPTX_H = 5.625;
+const PX2IN_X = PPTX_W / SLIDE_W;
+const PX2IN_Y = PPTX_H / SLIDE_H;
+
+let state = { slides: [], current: 0 };
+let prevSlideCount = 0;
+let prevCurrent = -1;
+let prevStateStr = '';
+let isPresenting = false;
+let slideContainer = null;
+
+// ── Core UI Update ──
+
+function updateUI(direction) {
+  const sidebarSlides = document.getElementById('sidebarSlides');
+  const waiting = document.getElementById('waiting');
+  const toolbar = document.getElementById('toolbar');
+  const statusText = document.getElementById('statusText');
+  const slideArea = document.getElementById('slideArea');
+  const progressBar = document.getElementById('progressBar');
+  const slideCount = document.getElementById('slideCount');
+
+  if (!state.slides || !state.slides.length) {
+    waiting.style.display = 'flex';
+    toolbar.style.display = 'none';
+    progressBar.style.display = 'none';
+    sidebarSlides.innerHTML = '';
+    slideCount.textContent = '0';
+    statusText.textContent = '等待内容...';
+    if (slideContainer) { slideContainer.remove(); slideContainer = null; }
+    updateNavArrows();
+    prevSlideCount = 0;
+    prevCurrent = -1;
+    return;
+  }
+
+  waiting.style.display = 'none';
+  toolbar.style.display = 'flex';
+  progressBar.style.display = 'flex';
+  const total = state.slides.length;
+  slideCount.textContent = total;
+  statusText.textContent = total + ' 页';
+
+  // ── Detect content changes (swap, edit, push with same count) ──
+  const currentStateStr = JSON.stringify(state.slides);
+  const contentChanged = currentStateStr !== prevStateStr;
+  const isNewSlide = total > prevSlideCount;
+
+  // ── Sidebar thumbnails ──
+  // Rebuild if content changed (not just count)
+  if (contentChanged) {
+    sidebarSlides.innerHTML = '';
+    state.slides.forEach((slide, i) => {
+      const div = document.createElement('div');
+      div.className = 'thumb' + (i === state.current ? ' active' : '');
+      if (i >= prevSlideCount && isNewSlide) div.classList.add('new-slide');
+      div.innerHTML = '<span class="thumb-num">' + (i + 1) + '</span>';
+      const inner = document.createElement('div');
+      inner.className = 'thumb-inner';
+      inner.innerHTML = getSlideHTML(slide);
+      const thumbW = 180;
+      inner.style.transform = 'scale(' + (thumbW / 960) + ')';
+      div.appendChild(inner);
+      div.onclick = () => { goToSlide(i); };
+      sidebarSlides.appendChild(div);
+    });
+  } else if (state.current !== prevCurrent) {
+    // Just update active state when only navigation changed
+    const thumbs = sidebarSlides.querySelectorAll('.thumb');
+    thumbs.forEach((t, i) => {
+      t.classList.toggle('active', i === state.current);
+    });
+  }
+
+  // Auto-scroll active thumbnail into view
+  const activeThumb = sidebarSlides.querySelector('.thumb.active');
+  if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // ── Main slide ──
+  if (!slideContainer) {
+    slideContainer = document.createElement('div');
+    slideContainer.className = 'slide-container';
+    slideArea.appendChild(slideContainer);
+  }
+
+  const rect = slideArea.getBoundingClientRect();
+  const maxW = rect.width - 120, maxH = rect.height - 40;
+  const scale = Math.min(maxW / 960, maxH / 540, 1.6);
+  slideContainer.style.width = (960 * scale) + 'px';
+  slideContainer.style.height = (540 * scale) + 'px';
+
+  // Re-render if slide changed OR content changed (swap/edit)
+  if (state.current !== prevCurrent || contentChanged) {
+    const frame = document.createElement('div');
+    frame.className = 'slide-frame';
+    if (direction === 'right') frame.classList.add('entering-right');
+    else if (direction === 'left') frame.classList.add('entering-left');
+    else if (isNewSlide && state.current === total - 1) frame.classList.add('entering-right');
+    else frame.classList.add('entering');
+    
+    frame.style.transform = 'scale(' + scale + ')';
+    frame.innerHTML = getSlideHTML(state.slides[state.current]);
+
+    // ── Auto-shrink content if it overflows 960×540 ──
+    slideContainer.innerHTML = '';
+    slideContainer.appendChild(frame);
+    autoFitSlideContent(frame);
+  }
+
+  // ── Progress dots ──
+  updateProgressDots(total, state.current);
+  document.getElementById('pageCounter').textContent = (state.current + 1) + ' / ' + total;
+
+  // ── Nav arrows ──
+  updateNavArrows();
+
+  // ── Generation progress ──
+  if (isNewSlide) {
+    showGenProgress(total);
+  }
+
+  // ── Fullscreen update ──
+  if (isPresenting) {
+    document.getElementById('fsSlide').innerHTML = getSlideHTML(state.slides[state.current]);
+    document.getElementById('fsPage').textContent = (state.current + 1) + ' / ' + total;
+  }
+
+  prevSlideCount = total;
+  prevCurrent = state.current;
+  prevStateStr = currentStateStr;
+}
+
+function updateProgressDots(total, current) {
+  const container = document.getElementById('progressDots');
+  // If dot count matches, just toggle active
+  if (container.children.length === total) {
+    Array.from(container.children).forEach((dot, i) => {
+      dot.classList.toggle('active', i === current);
+    });
+    return;
+  }
+  container.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot' + (i === current ? ' active' : '');
+    dot.onclick = () => goToSlide(i);
+    container.appendChild(dot);
+  }
+}
+
+function updateNavArrows() {
+  const left = document.getElementById('navLeft');
+  const right = document.getElementById('navRight');
+  const total = state.slides ? state.slides.length : 0;
+  left.disabled = !total || state.current <= 0;
+  right.disabled = !total || state.current >= total - 1;
+  left.style.display = total > 1 ? '' : 'none';
+  right.style.display = total > 1 ? '' : 'none';
+}
+
+function showGenProgress(slideCount) {
+  const el = document.getElementById('genProgress');
+  const bar = document.getElementById('genProgressBar');
+  el.classList.add('active');
+  // Estimate progress (assume max ~12 slides)
+  const pct = Math.min(100, (slideCount / 12) * 100);
+  bar.style.width = pct + '%';
+  // Hide after 3s of no new slides
+  clearTimeout(showGenProgress._timer);
+  showGenProgress._timer = setTimeout(() => {
+    el.classList.remove('active');
+    bar.style.width = '0%';
+  }, 3000);
+}
+
+// ── Navigation ──
+
+function goToSlide(index) {
+  const dir = index > state.current ? 'right' : 'left';
+  state.current = Math.max(0, Math.min(index, (state.slides?.length || 1) - 1));
+  updateUI(dir);
+}
+
+function navigate(delta) {
+  goToSlide(state.current + delta);
+}
+
+// ── Presentation Mode ──
+
+function enterPresentation() {
+  if (!state.slides || !state.slides.length) return;
+  isPresenting = true;
+  const overlay = document.getElementById('fsOverlay');
+  overlay.classList.add('active');
+  
+  const fsSlide = document.getElementById('fsSlide');
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const scale = Math.min(vw / 960, vh / 540);
+  fsSlide.style.transform = 'scale(' + scale + ')';
+  fsSlide.style.transformOrigin = 'center center';
+  fsSlide.innerHTML = getSlideHTML(state.slides[state.current]);
+  document.getElementById('fsPage').textContent = (state.current + 1) + ' / ' + state.slides.length;
+}
+
+function exitPresentation() {
+  isPresenting = false;
+  document.getElementById('fsOverlay').classList.remove('active');
+}
+
+// ── Auto-fit: shrink slide content if it overflows 960×540 ──
+
+function autoFitSlideContent(frame) {
+  const inner = frame.firstElementChild;
+  if (!inner) return;
+
+  // Temporarily allow overflow to measure real content height
+  const origOverflow = inner.style.overflow;
+  inner.style.overflow = 'visible';
+
+  // Force layout recalc
+  void inner.offsetHeight;
+
+  const contentH = inner.scrollHeight;
+  const contentW = inner.scrollWidth;
+
+  if (contentH > 540 || contentW > 960) {
+    // Scale down to fit — pick the tighter axis
+    const scaleY = 540 / contentH;
+    const scaleX = 960 / contentW;
+    const fitScale = Math.min(scaleX, scaleY, 1) * 0.97; // 3% safety margin
+
+    inner.style.transform = `scale(${fitScale.toFixed(3)})`;
+    inner.style.transformOrigin = '0 0';
+    inner.style.width = (960 / fitScale) + 'px';
+    inner.style.height = (540 / fitScale) + 'px';
+  }
+
+  inner.style.overflow = origOverflow || 'hidden';
+}
+
+// ── Slide HTML ──
+
+function getSlideHTML(slide) {
+  if (slide.html) return slide.html;
+  return renderLegacySlide(slide);
+}
+
+function renderLegacySlide(s) {
+  const t = Object.assign({
+    bg: '#0f1923', title: '#ffffff', body: '#c9d1d9', accent: '#4e9bff', muted: '#6b7b8d'
+  }, s.theme || {});
+  const type = s.type || 'bullets';
+  
+  if (type === 'cover' || type === 'title') {
+    return `<div style="width:960px;height:540px;background:linear-gradient(135deg,${t.bg},#1a2332);display:flex;flex-direction:column;justify-content:center;padding:48px 72px;font-family:Inter,'Noto Sans SC',sans-serif;position:relative;overflow:hidden">
+      <div style="position:absolute;width:400px;height:400px;border-radius:50%;top:-80px;right:-100px;background:${t.accent};opacity:0.06"></div>
+      ${s.badge ? `<span style="display:inline-block;font-size:12px;font-weight:600;padding:4px 14px;border-radius:14px;background:rgba(78,155,255,0.12);color:${t.accent};margin-bottom:12px">${esc(s.badge)}</span>` : ''}
+      <div style="font-size:42px;font-weight:700;color:${t.title};line-height:1.2">${esc(s.title||'')}</div>
+      <div style="width:64px;height:3px;background:${t.accent};border-radius:2px;margin:16px 0 20px"></div>
+      ${s.subtitle ? `<div style="font-size:19px;color:${t.muted}">${esc(s.subtitle)}</div>` : ''}
+      ${s.author||s.date ? `<div style="position:absolute;bottom:32px;left:72px;font-size:14px;color:${t.muted}">${esc([s.author,s.date].filter(Boolean).join('  \xB7  '))}</div>` : ''}
+      <div style="position:absolute;bottom:0;left:0;width:100%;height:5px;background:${t.accent}"></div>
+    </div>`;
+  }
+  if (type === 'section') {
+    return `<div style="width:960px;height:540px;background:linear-gradient(135deg,${t.bg},#1a2332);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Inter,'Noto Sans SC',sans-serif;position:relative;overflow:hidden">
+      <div style="position:absolute;left:0;top:0;width:5px;height:100%;background:${t.accent}"></div>
+      ${s.number ? `<div style="font-size:110px;font-weight:900;color:${t.accent};opacity:0.1;position:absolute;top:50%;left:50%;transform:translate(-50%,-65%)">${String(s.number).padStart(2,'0')}</div>` : ''}
+      ${s.icon ? `<div style="font-size:36px;margin-bottom:12px">${s.icon}</div>` : ''}
+      <div style="font-size:34px;font-weight:700;color:${t.title};position:relative;z-index:2">${esc(s.title||'')}</div>
+      ${s.text ? `<div style="font-size:17px;color:${t.muted};margin-top:14px;max-width:60%;position:relative;z-index:2">${esc(s.text)}</div>` : ''}
+    </div>`;
+  }
+  if (type === 'quote') {
+    return `<div style="width:960px;height:540px;background:linear-gradient(135deg,${t.bg},#1a2332);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 80px;font-family:Inter,'Noto Sans SC',sans-serif;position:relative;overflow:hidden">
+      <div style="position:absolute;top:60px;left:40px;font-size:240px;font-family:Georgia,serif;color:${t.accent};opacity:0.06;line-height:1">\u201C</div>
+      <div style="font-size:24px;font-style:italic;font-family:Georgia,'Noto Sans SC',serif;line-height:1.65;color:${t.title};max-width:75%;position:relative;z-index:2">${esc(s.text||'')}</div>
+      ${s.author ? `<div style="width:48px;height:2px;background:${t.accent};border-radius:1px;margin:18px auto"></div><div style="font-size:15px;color:${t.muted}">${esc(s.author)}</div>` : ''}
+    </div>`;
+  }
+  if (type === 'ending' || type === 'thank_you') {
+    return `<div style="width:960px;height:540px;background:linear-gradient(135deg,${t.bg},#1a2332);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Inter,'Noto Sans SC',sans-serif;position:relative;overflow:hidden">
+      ${s.icon ? `<div style="font-size:36px;margin-bottom:16px">${s.icon}</div>` : ''}
+      <div style="font-size:40px;font-weight:700;color:${t.title}">${esc(s.title||'\u611F\u8C22')}</div>
+      ${s.text||s.subtitle ? `<div style="font-size:18px;color:${t.muted};margin-top:16px;max-width:55%">${esc(s.text||s.subtitle)}</div>` : ''}
+      ${s.contact ? `<div style="position:absolute;bottom:40px;font-size:13px;color:${t.muted}">${esc(s.contact)}</div>` : ''}
+      <div style="position:absolute;bottom:0;left:0;width:100%;height:5px;background:${t.accent}"></div>
+    </div>`;
+  }
+  // Default: bullets
+  const items = (s.items||[]).map((item, i) => {
+    const txt = typeof item === 'string' ? item : (item.text||'');
+    const icon = typeof item === 'object' ? item.icon : null;
+    return `<div style="display:flex;align-items:center;gap:14px;padding:12px 18px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.06);font-size:15px;line-height:1.5;color:${t.body}">
+      ${icon ? `<span style="font-size:20px">${icon}</span>` : `<span style="width:26px;height:26px;border-radius:50%;background:${t.accent};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">${i+1}</span>`}
+      <span>${esc(txt)}</span></div>`;
+  }).join('');
+  return `<div style="width:960px;height:540px;background:${t.bg};display:flex;flex-direction:column;padding:36px 52px;font-family:Inter,'Noto Sans SC',sans-serif;position:relative;overflow:hidden">
+    ${s.badge ? `<span style="display:inline-block;font-size:12px;font-weight:600;padding:4px 14px;border-radius:14px;background:rgba(78,155,255,0.12);color:${t.accent};margin-bottom:8px">${esc(s.badge)}</span>` : ''}
+    <div style="font-size:26px;font-weight:700;color:${t.title}">${esc(s.title||'')}</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;flex:1;overflow:hidden">${items}</div>
+  </div>`;
+}
+
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ── Keyboard Navigation ──
+
+document.addEventListener('keydown', e => {
+  // Presentation mode
+  if (isPresenting) {
+    if (e.key === 'Escape') { exitPresentation(); return; }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      goToSlide(state.current + 1);
+      return;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      goToSlide(state.current - 1);
+      return;
+    }
+    return;
+  }
+
+  // Normal mode
+  if (!state.slides || !state.slides.length) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); navigate(1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); navigate(-1); }
+  else if (e.key === 'f' || e.key === 'F') { enterPresentation(); }
+  else if (e.key === 'Home') { e.preventDefault(); goToSlide(0); }
+  else if (e.key === 'End') { e.preventDefault(); goToSlide((state.slides?.length || 1) - 1); }
+});
+
+// Fullscreen click to advance
+document.getElementById('fsOverlay').addEventListener('click', e => {
+  if (e.target.tagName === 'BUTTON') return;
+  const rect = document.getElementById('fsOverlay').getBoundingClientRect();
+  if (e.clientX > rect.width / 2) navigate(1);
+  else navigate(-1);
+});
+
+// ── SSE Connection ──
+
+let sseRetryCount = 0;
+
+function connectSSE() {
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const es = new EventSource('/api/stream');
+  
+  es.onopen = () => {
+    sseRetryCount = 0;
+    statusDot.className = 'status-dot connected';
+    statusText.textContent = state.slides?.length ? (state.slides.length + ' \u9875') : '\u5DF2\u8FDE\u63A5';
+  };
+
+  es.onmessage = e => {
+    try {
+      const newState = JSON.parse(e.data);
+      const hadSlides = state.slides?.length || 0;
+      const wasNewSlide = (newState.slides?.length || 0) > hadSlides;
+      state = newState;
+      
+      // Auto-navigate to latest slide when new ones arrive during generation
+      if (wasNewSlide && state.current === 0 && hadSlides > 0) {
+        state.current = state.slides.length - 1;
+      }
+      
+      updateUI(wasNewSlide ? 'right' : undefined);
+    } catch {}
+  };
+  
+  es.onerror = () => {
+    es.close();
+    statusDot.className = 'status-dot disconnected';
+    statusText.textContent = '\u91CD\u8FDE\u4E2D...';
+    sseRetryCount++;
+    const delay = Math.min(2000 * sseRetryCount, 10000);
+    setTimeout(connectSSE, delay);
+  };
+}
+connectSSE();
+updateUI();
+
+// ── Toast ──
+
+function showToast(msg, ms) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), ms || 3000);
+}
+
+// ══════════════════════════════════════════════════════
+//  PPTX EXPORT
+// ══════════════════════════════════════════════════════
+
+async function exportPptx() {
+  if (!state.slides || !state.slides.length) return;
+  const btn = document.getElementById('btnExport');
+  btn.disabled = true;
+  btn.classList.add('exporting');
+  btn.innerHTML = '\u23F3 \u5BFC\u51FA\u4E2D...';
+  showToast('\u6B63\u5728\u751F\u6210 PPTX\uFF0C\u8BF7\u7A0D\u5019...', 15000);
+
+  try {
+    const pptx = new PptxGenJS();
+    pptx.defineLayout({ name: 'CUSTOM', width: PPTX_W, height: PPTX_H });
+    pptx.layout = 'CUSTOM';
+
+    const offscreen = document.getElementById('offscreen');
+    // Temporarily reposition offscreen container for reliable html2canvas capture
+    offscreen.style.left = '0px';
+    offscreen.style.zIndex = '-9999';
+
+    for (let i = 0; i < state.slides.length; i++) {
+      btn.innerHTML = `\u23F3 ${i+1}/${state.slides.length}`;
+
+      offscreen.innerHTML = getSlideHTML(state.slides[i]);
+      const root = offscreen.firstElementChild;
+      if (!root) continue;
+
+      root.style.width = SLIDE_W + 'px';
+      root.style.height = SLIDE_H + 'px';
+      root.style.position = 'relative';
+      root.style.overflow = 'hidden';
+
+      // ── Auto-fit overflowing content before capture ──
+      root.style.overflow = 'visible';
+      void root.offsetHeight;
+      if (root.scrollHeight > SLIDE_H || root.scrollWidth > SLIDE_W) {
+        const fitS = Math.min(SLIDE_W / root.scrollWidth, SLIDE_H / root.scrollHeight, 1) * 0.97;
+        root.style.transform = `scale(${fitS.toFixed(3)})`;
+        root.style.transformOrigin = '0 0';
+        root.style.width = (SLIDE_W / fitS) + 'px';
+        root.style.height = (SLIDE_H / fitS) + 'px';
+      }
+      root.style.overflow = 'hidden';
+
+      // ── Wait for browser layout before extracting positions ──
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      await new Promise(r => setTimeout(r, 80));
+
+      // ── Extract text with computed styles & positions ──
+      const textNodes = extractTextElements(root);
+      console.log(`Slide ${i+1}: extracted ${textNodes.length} text nodes`);
+
+      // ── Hide text for html2canvas so bg image has no text ──
+      const hiddenEls = hideTextForCapture(root);
+
+      await new Promise(r => setTimeout(r, 50));
+
+      let bgImage = null;
+      try {
+        const canvas = await html2canvas(root, {
+          width: SLIDE_W, height: SLIDE_H, scale: 2,
+          useCORS: true, backgroundColor: null, logging: false,
+        });
+        bgImage = canvas.toDataURL('image/png');
+      } catch (e) {
+        console.warn('html2canvas failed for slide', i, e);
+      }
+
+      // ── Restore text visibility ──
+      restoreTextAfterCapture(hiddenEls);
+
+      const pptSlide = pptx.addSlide();
+
+      if (bgImage) {
+        pptSlide.addImage({ data: bgImage, x: 0, y: 0, w: PPTX_W, h: PPTX_H });
+      } else {
+        const bgColor = extractBgColor(root);
+        if (bgColor) pptSlide.background = { color: bgColor };
+      }
+
+      // ── Add editable text boxes on top of bg image ──
+      for (const tn of textNodes) {
+        // Convert px → inches, add 15% width margin for font metric differences
+        const rawW = tn.w * PX2IN_X * 1.15;
+        const rawX = tn.x * PX2IN_X;
+        const w = Math.min(rawW, PPTX_W - rawX);  // clamp to slide edge
+        const h = Math.max(tn.h * PX2IN_Y, tn.fontSize * 0.75 / 72 * 1.8);  // min height
+        const opts = {
+          x: rawX, y: tn.y * PX2IN_Y,
+          w: w, h: h,
+          fontSize: Math.round(tn.fontSize * 0.75),
+          color: tn.color, fontFace: 'Microsoft YaHei',
+          bold: tn.bold, italic: tn.italic,
+          align: tn.align || 'left', valign: 'top',
+          shrinkText: true,       // auto-shrink if text overflows
+          wrap: true,
+          transparency: 0, fill: { type: 'none' }, line: { type: 'none' },
+        };
+        if (opts.y + opts.h > PPTX_H) opts.h = PPTX_H - opts.y;
+        if (opts.w > 0.1 && opts.h > 0.1) pptSlide.addText(tn.text, opts);
+      }
+    }
+
+    const fileName = 'LivePPT_' + new Date().toISOString().slice(0,10) + '.pptx';
+    await pptx.writeFile({ fileName });
+    showToast('\u2705 \u5DF2\u4E0B\u8F7D ' + fileName, 3000);
+
+  } catch (err) {
+    console.error('Export failed:', err);
+    showToast('\u274C \u5BFC\u51FA\u5931\u8D25: ' + err.message, 5000);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('exporting');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> \u5BFC\u51FA PPTX';
+    document.getElementById('offscreen').innerHTML = '';
+    document.getElementById('offscreen').style.left = '-9999px';
+    document.getElementById('offscreen').style.zIndex = '';
+  }
+}
+
+// ── Text extraction helpers ──
+
+function extractBgColor(el) {
+  const cs = getComputedStyle(el);
+  const bg = cs.backgroundColor;
+  if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') return null;
+  const m = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (!m) return null;
+  return rgbToHex(+m[1], +m[2], +m[3]);
+}
+
+function extractTextElements(root) {
+  const results = [];
+  const rootRect = root.getBoundingClientRect();
+
+  function walk(el) {
+    if (!el || el.nodeType !== 1) return;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) < 0.15) return;
+    
+    // Get ALL text content (including children) for leaf-level text containers
+    const directText = getDirectText(el).trim();
+    if (directText && directText.length > 0) {
+      const elRect = el.getBoundingClientRect();
+      const x = elRect.left - rootRect.left;
+      const y = elRect.top - rootRect.top;
+      let w = elRect.width;
+      const h = elRect.height;
+      if (x >= SLIDE_W || y >= SLIDE_H || w < 5 || h < 5) return;
+
+      const fontSize = parseFloat(cs.fontSize) || 14;
+      if (fontSize > 80) return;
+
+      // Use the parent's width if this element is narrower than expected
+      // This prevents text boxes from being too narrow and causing bad wrapping
+      const parent = el.parentElement;
+      if (parent && parent !== root) {
+        const parentRect = parent.getBoundingClientRect();
+        const parentW = parentRect.width;
+        if (parentW > w * 1.2) {
+          // Parent is notably wider — use parent width from this element's x position
+          w = Math.min(parentW, SLIDE_W - x);
+        }
+      }
+
+      const color = cssColorToHex(cs.color) || '333333';  // dark fallback, safe on both dark/light
+      const bold = parseInt(cs.fontWeight) >= 600 || cs.fontWeight === 'bold';
+      const italic = cs.fontStyle === 'italic';
+      const ta = cs.textAlign;
+      const align = ta === 'center' ? 'center' : ta === 'right' ? 'right' : 'left';
+
+      results.push({
+        text: directText,
+        x: Math.max(0, x), y: Math.max(0, y),
+        w: Math.min(w, SLIDE_W - x),
+        h: Math.max(h, fontSize * 1.8),
+        fontSize, color, bold, italic, align,
+      });
+    }
+    for (const child of el.children) walk(child);
+  }
+
+  walk(root);
+  return deduplicateTexts(results);
+}
+
+function getDirectText(el) {
+  let text = '';
+  for (const node of el.childNodes) {
+    if (node.nodeType === 3) text += node.textContent;
+  }
+  return text;
+}
+
+function deduplicateTexts(items) {
+  const result = [];
+  for (let i = 0; i < items.length; i++) {
+    let dominated = false;
+    for (let j = 0; j < items.length; j++) {
+      if (i === j) continue;
+      if (items[j].text === items[i].text && 
+          Math.abs(items[j].x - items[i].x) < 20 &&
+          Math.abs(items[j].y - items[i].y) < 20 &&
+          items[j].w * items[j].h < items[i].w * items[i].h) {
+        dominated = true;
+        break;
+      }
+    }
+    if (!dominated) result.push(items[i]);
+  }
+  return result;
+}
+
+// ── Hide/restore text for clean bg capture ──
+
+function hideTextForCapture(root) {
+  // Walk the DOM and set color to transparent on elements that contain direct text.
+  // This keeps layout intact (boxes, spacing) but removes text from the raster image.
+  const hidden = [];
+  function walk(el) {
+    if (!el || el.nodeType !== 1) return;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return;
+
+    // Check if this element has direct text nodes
+    let hasText = false;
+    for (const node of el.childNodes) {
+      if (node.nodeType === 3 && node.textContent.trim()) { hasText = true; break; }
+    }
+    if (hasText) {
+      hidden.push({ el, origColor: el.style.color, origWebkit: el.style.webkitTextFillColor });
+      el.style.color = 'transparent';
+      el.style.webkitTextFillColor = 'transparent';
+    }
+    for (const child of el.children) walk(child);
+  }
+  walk(root);
+  return hidden;
+}
+
+function restoreTextAfterCapture(hidden) {
+  for (const { el, origColor, origWebkit } of hidden) {
+    el.style.color = origColor;
+    el.style.webkitTextFillColor = origWebkit;
+  }
+}
+
+function rgbToHex(r, g, b) {
+  return ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0').toUpperCase();
+}
+
+function cssColorToHex(cssColor) {
+  if (!cssColor) return null;
+  if (cssColor.startsWith('#')) {
+    let h = cssColor.slice(1);
+    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    return h.toUpperCase();
+  }
+  const m = cssColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (m) return rgbToHex(+m[1], +m[2], +m[3]);
+  return null;
+}
+</script>
+</body>
+</html>

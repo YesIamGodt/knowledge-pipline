@@ -10,20 +10,35 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Skills](https://img.shields.io/badge/npx%20skills%20add-knowledge--pipline-00b894)](https://skills.sh)
 
-一个 Claude Code 技能 — 把 PDF、图片、Word、Excel、视频丢给它，自动编译成结构化 Markdown 维基 + 交互式知识图谱。  
-跨文档矛盾检测、知识融合、深度推理链 — 不只是检索，而是**推理**。
-
-[快速开始](#-快速开始) · [Live PPT 旗舰功能](#-live-ppt--知识驱动的演示文稿旗舰功能) · [谁需要这个](#-谁需要这个) · [对比竞品](#-对比竞品) · [核心能力](#-核心能力)
-
 </div>
 
 ---
 
-## 📑 Live PPT — 知识驱动的演示文稿（🚀 旗舰功能）
+## 🚀 Live PPT — 知识驱动的演示文稿引擎
 
-> **问题**：Gemini、GPT、Gamma 这些工具能生成漂亮幻灯片。但把一份 200 页审计报告丢给它们？它们只会泛泛而谈。因为它们不"理解"你的文档 — 只是在拼凑模型通用知识。
->
-> **解决**：`/pipeline-ppt` 的输入不是一句提示词 — 是你的**整座知识库**。18 份文档编译成的实体网络、概念关系、矛盾检测结果，全部成为幻灯片的内容来源。
+<div align="center">
+
+<img src="assets/readme/liveppt-product.png" alt="LivePPT 产品界面" width="800" />
+
+<br/><br/>
+
+> **别人用 AI 做"好看的幻灯片"。Knowledge Pipeline 做"有深度的分析报告"。**
+
+<br/>
+
+https://github.com/user-attachments/assets/liveppt-demo.mp4
+
+<video src="assets/readme/liveppt-demo.mp4" width="800" controls>
+  你的浏览器不支持视频播放，请<a href="assets/readme/liveppt-demo.mp4">下载视频</a>查看。
+</video>
+
+</div>
+
+### 为什么 LivePPT 需要 Knowledge Pipeline？
+
+其他 AI PPT 工具（Gemini / GPT / Gamma）的输入是**一句提示词** — 输出是模型通用知识的排列组合。
+
+LivePPT 的输入是**你的整座知识库** — 18 份文档编译成的实体网络、概念关系、矛盾检测结果，全部成为幻灯片内容的来源。没有 Knowledge Pipeline 的知识编译层，LivePPT 就只是又一个套模板的工具。
 
 ```
 /pipeline-ppt "AI安全趋势分析"
@@ -39,7 +54,14 @@
 - 📐 **智能排版** — 内容过多自动缩放，不会溢出截断
 - ⌨️ **键盘导航** — ←→ 翻页 · F 全屏 · Home/End 首尾页
 
-> **别人用 AI 做"好看的幻灯片"。你用 Knowledge Pipeline 做"有洞察的分析报告"。**
+<div align="center">
+
+一个 Claude Code 技能 — 把 PDF、图片、Word、Excel、视频丢给它，自动编译成结构化 Markdown 维基 + 交互式知识图谱。  
+跨文档矛盾检测、知识融合、深度推理链 — 不只是检索，而是**推理**。
+
+[快速开始](#-快速开始) · [谁需要这个](#-谁需要这个) · [对比竞品](#-对比竞品) · [核心能力](#-核心能力)
+
+</div>
 
 ---
 

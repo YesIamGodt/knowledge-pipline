@@ -350,6 +350,29 @@ def cmd_templates(args):
     _print_templates(templates, getattr(args, "highlight_id", None))
 
 
+def cmd_templates_json(args):
+    """Emit all available templates as structured JSON for stable command workflows."""
+    templates = _load_all_templates()
+    items = []
+    for i, template in enumerate(templates, 1):
+        items.append({
+            "index": i,
+            "id": template.get("id"),
+            "name": template.get("name"),
+            "description": template.get("description", ""),
+            "preview": template.get("preview", "📄"),
+            "source": "user" if template.get("user_uploaded") else "builtin",
+            "theme": template.get("theme", {}),
+            "fonts": template.get("fonts", {}),
+        })
+
+    print(json.dumps({
+        "count": len(items),
+        "templates": items,
+        "upload_option_index": len(items) + 1,
+    }, indent=2, ensure_ascii=False))
+
+
 def cmd_parse_template(args):
     """Parse a user-uploaded PPTX file into a reusable template."""
     pptx_path = Path(args.file)
@@ -534,6 +557,7 @@ def main():
 
     # templates (old — lists server-side themes)
     sub.add_parser("templates", help="List all available templates")
+    sub.add_parser("templates-json", help="List all available templates as JSON")
 
     # parse-template (old — server-side template analysis)
     p_parse = sub.add_parser("parse-template", help="Parse a PPTX file into a reusable template")
@@ -565,6 +589,7 @@ def main():
         "reset": cmd_reset,
         "stop": cmd_stop,
         "templates": cmd_templates,
+        "templates-json": cmd_templates_json,
         "parse-template": cmd_parse_template,
         "upload-template": cmd_parse_template,
         "get-template": cmd_get_template,

@@ -34,6 +34,18 @@ import time
 from pathlib import Path
 from datetime import date
 
+
+def enable_safe_console_output():
+    """Avoid UnicodeEncodeError on legacy Windows consoles (e.g., GBK)."""
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        if stream and hasattr(stream, "reconfigure"):
+            try:
+                # Keep current encoding, but replace unsupported characters safely.
+                stream.reconfigure(errors="replace")
+            except Exception:
+                pass
+
 # --- 流式进度输出 ---
 def progress(msg: str):
     """实时输出进度信息到 stderr（不会被管道吞掉）"""
@@ -330,6 +342,8 @@ def process_source_with_backend(source_path: str) -> tuple[str, dict]:
 
 
 def ingest(source_path: str):
+    enable_safe_console_output()
+
     source = Path(source_path)
     if not source.exists():
         print(f"Error: file not found: {source_path}")

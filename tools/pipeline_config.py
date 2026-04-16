@@ -9,6 +9,18 @@ import sys
 import json
 from pathlib import Path
 
+
+def enable_safe_console_output():
+    """Avoid UnicodeEncodeError on legacy Windows consoles (e.g., GBK)."""
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        if stream and hasattr(stream, "reconfigure"):
+            try:
+                # Keep current encoding, but replace unsupported characters safely.
+                stream.reconfigure(errors="replace")
+            except Exception:
+                pass
+
 # 添加项目路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -33,6 +45,8 @@ def print_current_config(config: LLMConfig):
 
 def configure_llm_interactive():
     """交互式配置 LLM API"""
+    enable_safe_console_output()
+
     print("=" * 60)
     print("🚀 LLM API 配置向导")
     print("=" * 60)
@@ -99,10 +113,11 @@ def configure_llm_interactive():
         examples = ["llama3.2", "qwen2", "mixtral"]
 
     else:  # 自定义
-        model = input("📝 输入模型名称 (例如: deepseek-chat): ").strip()
-        if not model:
+        while True:
+            model = input("📝 输入模型名称 (例如: deepseek-chat): ").strip()
+            if model:
+                break
             print("⚠️  模型名称不能为空")
-            continue
         examples = ["deepseek-chat", "meta-llama/Llama-3-8b-chat-hf", "anthropic/claude-3-opus"]
 
     print()
@@ -114,10 +129,11 @@ def configure_llm_interactive():
         api_key = ""
         print("ℹ️  Ollama 本地模型服务不需要 API 密钥")
     else:
-        api_key = input("🔑 输入 API 密钥: ").strip()
-        if not api_key:
+        while True:
+            api_key = input("🔑 输入 API 密钥: ").strip()
+            if api_key:
+                break
             print("⚠️  API 密钥不能为空")
-            continue
 
     print()
     print("=" * 60)
@@ -158,6 +174,8 @@ def configure_llm_interactive():
 
 def main():
     """主函数"""
+    enable_safe_console_output()
+
     print("LLM 配置管理工具")
     print("=" * 60)
 

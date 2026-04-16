@@ -38,6 +38,73 @@ def _server_alive(port: int) -> bool:
         return False
 
 
+def _preview_root_ok(port: int) -> bool:
+    try:
+        req = urllib.request.Request(f"http://localhost:{port}/")
+        with urllib.request.urlopen(req, timeout=1.5) as resp:
+            if int(getattr(resp, "status", 0)) != 200:
+                return False
+            body = resp.read().decode("utf-8", errors="ignore").lower()
+            return "<html" in body or "<!doctype html" in body
+    except Exception:
+        return False
+
+
+def _kill_processes_on_port(port: int) -> None:
+    # Best-effort cleanup of stale preview servers occupying the target port.
+    if sys.platform == "win32":
+        try:
+            result = subprocess.run(
+                ["netstat", "-ano"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+        except Exception:
+            return
+
+        pids = set()
+        for line in result.stdout.splitlines():
+            if f":{port}" not in line or "LISTENING" not in line:
+                continue
+            parts = line.split()
+            if not parts:
+                continue
+            pid = parts[-1]
+            if pid.isdigit():
+                pids.add(pid)
+
+        for pid in pids:
+            try:
+                subprocess.run(
+                    ["taskkill", "/PID", pid, "/F"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+            except Exception:
+                pass
+        return
+
+    # Unix-like fallback
+    try:
+        result = subprocess.run(
+            ["lsof", "-ti", f"tcp:{port}"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        for line in result.stdout.splitlines():
+            pid = line.strip()
+            if pid.isdigit():
+                try:
+                    subprocess.run(["kill", "-9", pid], timeout=5)
+                except Exception:
+                    pass
+    except Exception:
+        return
+
+
 def _home_candidates() -> List[Path]:
     vals = []
     for key in ("USERPROFILE", "HOME"):
@@ -97,7 +164,11 @@ def check_llm_config(skill_dir: Path) -> Dict[str, str]:
 
 def ensure_server(skill_dir: Path, port: int, timeout_sec: float = 30.0) -> Dict[str, str]:
     if _server_alive(port):
-        return {"ok": "true", "status": "already-running", "url": f"http://localhost:{port}"}
+        if _preview_root_ok(port):
+            return {"ok": "true", "status": "already-running", "url": f"http://localhost:{port}"}
+        _kill_processes_on_port(port)
+        # Give the OS a brief moment to release the port after killing stale process.
+        time.sleep(0.6)
 
     server_py = skill_dir / "demo" / "ppt_live" / "server.py"
     if not server_py.exists():
@@ -127,13 +198,13 @@ def ensure_server(skill_dir: Path, port: int, timeout_sec: float = 30.0) -> Dict
         popen_kwargs["start_new_session"] = True
 
     subprocess.Popen(
-        [sys.executable, str(server_py), "--port", str(port), "--no-browser"],
+        [sys.executable, str(server_py), "--port", str(port)],
         **popen_kwargs,
     )
 
     end = time.time() + timeout_sec
     while time.time() < end:
-        if _server_alive(port):
+        if _server_alive(port) and _preview_root_ok(port):
             return {"ok": "true", "status": "started", "url": f"http://localhost:{port}"}
         time.sleep(0.4)
 

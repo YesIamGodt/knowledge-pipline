@@ -520,6 +520,11 @@ def main():
     p_parse.add_argument("file", help="Path to .pptx file")
     p_parse.add_argument("--name", help="Template display name")
 
+    # upload-template (preferred alias — extract style only, persist as reusable theme)
+    p_upload = sub.add_parser("upload-template", help="Extract a PPTX style into a reusable theme")
+    p_upload.add_argument("file", help="Path to .pptx file")
+    p_upload.add_argument("--name", help="Template display name")
+
     # get-template (old — get server-side template theme)
     p_get_tpl = sub.add_parser("get-template", help="Get a template's theme by ID")
     p_get_tpl.add_argument("template_id", help="Template ID")
@@ -541,6 +546,7 @@ def main():
         "stop": cmd_stop,
         "templates": cmd_templates,
         "parse-template": cmd_parse_template,
+        "upload-template": cmd_parse_template,
         "get-template": cmd_get_template,
     }[args.cmd](args)
 

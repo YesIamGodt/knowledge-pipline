@@ -315,8 +315,7 @@ def cmd_swap(args):
     _verify_state(expected_count=len(slides))
 
 
-def cmd_templates(args):
-    """List available templates (built-in + user-parsed)."""
+def _load_all_templates():
     templates_file = SCRIPT_DIR / "templates.json"
     user_templates_file = SCRIPT_DIR / "user_templates.json"
 
@@ -325,6 +324,12 @@ def cmd_templates(args):
         templates.extend(json.loads(templates_file.read_text("utf-8")))
     if user_templates_file.exists():
         templates.extend(json.loads(user_templates_file.read_text("utf-8")))
+    return templates
+
+
+def cmd_templates(args):
+    """List available templates (built-in + user-parsed)."""
+    templates = _load_all_templates()
 
     if not templates:
         print("❌ 没有可用的模板")
@@ -406,11 +411,18 @@ def cmd_parse_template(args):
         existing.append(new_template)
         user_templates_file.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
 
+        all_templates = _load_all_templates()
+        template_index = next((i for i, template in enumerate(all_templates, 1) if template.get("id") == template_id), None)
+
         print(f"✅ 模板已解析并保存: {new_template['name']}")
         print(f"   ID: {template_id}")
         print(f"   配色: bg={new_template['theme']['bg']} accent={accent1}")
         print(f"   字体: {new_template['fonts']}")
         print(f"   布局: {len(new_template.get('layouts', []))} 种")
+        print(f"   当前可用模板总数: {len(all_templates)}")
+        if template_index is not None:
+            print(f"   新模板编号: {template_index}")
+            print(f"   提示: 回到模板列表后，可直接输入编号 {template_index} 选择这个新风格")
 
     except ImportError as e:
         print(f"❌ 缺少依赖: {e}")

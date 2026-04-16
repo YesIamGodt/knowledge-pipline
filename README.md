@@ -26,11 +26,7 @@
 
 <br/>
 
-https://github.com/user-attachments/assets/liveppt-demo.mp4
-
-<video src="assets/readme/liveppt-demo.mp4" width="800" controls>
-  你的浏览器不支持视频播放，请<a href="assets/readme/liveppt-demo.mp4">下载视频</a>查看。
-</video>
+https://github.com/user-attachments/assets/3f335ad8-fef2-49b5-9fc3-564a86602851
 
 </div>
 

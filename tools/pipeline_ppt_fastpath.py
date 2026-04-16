@@ -238,6 +238,19 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
     if server.get("ok") != "true":
         return 3
 
+    # Reset server state to clear slides from previous session
+    try:
+        body = b"{}"
+        req = urllib.request.Request(
+            f"http://localhost:{args.port}/api/reset",
+            data=body,
+            headers={"Content-Type": "application/json"},
+        )
+        urllib.request.urlopen(req, timeout=2)
+        print("SERVER_RESET=true")
+    except Exception:
+        print("SERVER_RESET=false")
+
     docs = list_wiki(skill_dir)
     print(f"WIKI_DOC_COUNT={len(docs)}")
     if not docs:

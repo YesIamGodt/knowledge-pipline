@@ -209,7 +209,7 @@ node "$HOME\.agents\skills\knowledge-pipline\scripts\install-commands.mjs"
 node ~/.agents/skills/knowledge-pipline/scripts/install-commands.mjs
 ```
 
-这会将五个斜杠命令注册到 `~/.claude/commands/`，让你可以在任何项目中使用 `/pipeline-config`、`/pipeline-ingest`、`/pipeline-query`、`/pipeline-graph`、`/pipeline-lint`。
+这会将六个斜杠命令注册到 `~/.claude/commands/`，让你可以在任何项目中使用 `/pipeline-config`、`/pipeline-ingest`、`/pipeline-query`、`/pipeline-graph`、`/pipeline-lint`、`/pipeline-ppt`。
 
 ### 方式二：手动安装
 

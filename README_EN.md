@@ -187,7 +187,7 @@ node "$HOME\.agents\skills\knowledge-pipline\scripts\install-commands.mjs"
 node ~/.agents/skills/knowledge-pipline/scripts/install-commands.mjs
 ```
 
-This registers five slash commands to `~/.claude/commands/`, making `/pipeline-config`, `/pipeline-ingest`, `/pipeline-query`, `/pipeline-graph`, `/pipeline-lint` available in any project.
+This registers six slash commands to `~/.claude/commands/`, making `/pipeline-config`, `/pipeline-ingest`, `/pipeline-query`, `/pipeline-graph`, `/pipeline-lint`, and `/pipeline-ppt` available in any project.
 
 ### Option 2: Manual Install
 

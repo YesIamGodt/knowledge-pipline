@@ -4,7 +4,7 @@
  * install-commands.mjs
  *
  * 安装 knowledge-pipline 的斜杠命令到 ~/.claude/commands/
- * 使 /pipeline-ingest, /pipeline-query, /pipeline-graph, /pipeline-lint 全局可用
+ * 使 /pipeline-config, /pipeline-ingest, /pipeline-query, /pipeline-graph, /pipeline-lint, /pipeline-ppt 全局可用
  *
  * 用法：
  *   node scripts/install-commands.mjs
@@ -37,6 +37,7 @@ const commandFiles = [
   'pipeline-graph.md',
   'pipeline-lint.md',
   'pipeline-config.md',
+  'pipeline-ppt.md',
 ];
 
 console.log('');
@@ -75,4 +76,5 @@ console.log('    /pipeline-ingest "D:\\path\\to\\document.pdf"  # 摄入文档')
 console.log('    /pipeline-query "你的问题"                   # 查询');
 console.log('    /pipeline-graph                            # 构建知识图谱');
 console.log('    /pipeline-lint                             # 检查维基');
+console.log('    /pipeline-ppt "你的主题"                  # 生成 Live PPT');
 console.log('');

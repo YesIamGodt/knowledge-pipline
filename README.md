@@ -545,19 +545,63 @@ AI：📑 Live PPT Generator
 
 ### 📑 `/pipeline-ppt` — 生成 Live PPT
 
-基于知识维基自动生成交互式 HTML 演示文稿。
+一句命令进入交互模式，全程引导你完成 PPT 生成：
 
 ```bash
-/pipeline-ppt "AI安全趋势分析"
-/pipeline-ppt "竞品对比" --theme apple --pages 10
-/pipeline-ppt "项目总结" --sources claude-code-leak,rag-tech --open
+/pipeline-ppt
 ```
 
-参数：
-- `--pages N` — 指定幻灯片数量（默认自动）
-- `--theme` — dark / light / apple / warm / minimal
-- `--sources` — 指定使用的源文档（逗号分隔 slug）
-- `--open` — 生成后自动在浏览器打开
+执行后会经历 **三步交互**，每一步都会暂停等你输入：
+
+**第 ① 步：选择知识源**
+
+命令会自动扫描你的 wiki，按分类列出所有已摄入的文档：
+
+```
+── sources ──
+  1. sources/claude-code-leak.md
+  2. sources/rag-tech.md
+── entities ──
+  3. entities/Anthropic.md
+── concepts ──
+  4. concepts/RAG.md
+  5. concepts/SupplyChainSecurity.md
+
+📂 请输入要使用的文档编号（支持多选）
+示例：1,3  或  1-5  或  2,4,6-8
+```
+
+你挑哪些文档，PPT 就基于哪些知识生成。不是全扔进去让 AI 自己猜。
+
+**第 ② 步：描述 PPT 方向**
+
+AI 会基于你选的文档，给出一个建议主题：
+
+```
+📝 根据您选择的文档，建议的主题方向：
+  「AI 安全态势分析 — 涵盖源码泄露事件、供应链风险、竞品对比，建议 10 页」
+
+您可以直接选择，也可以自己描述。
+```
+
+你可以接受建议，也可以自由输入"只做安全部分，5 页就够"之类的具体要求。
+
+**第 ③ 步：选择视觉模板**
+
+列出所有可用模板，输入编号单选：
+
+```
+🎨 当前所有可用模板（单选）
+  1. 🌑 深色科技 — dark-tech
+  2. 🌊 午夜商务 — midnight-exec
+  3. 🪸 活力珊瑚 — coral-energy
+  ...
+  8. 📤 上传新 PPTX 模板
+
+请输入模板编号：3
+```
+
+选完后 AI 自动生成 → 浏览器实时预览 → 你可以继续用自然语言逐页编辑 → 满意后一键导出 PPTX。
 
 输出：`graph/liveppt.html` — 自包含 HTML，发给任何人直接打开。
 

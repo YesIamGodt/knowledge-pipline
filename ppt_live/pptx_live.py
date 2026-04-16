@@ -327,6 +327,18 @@ def _load_all_templates():
     return templates
 
 
+def _print_templates(templates, highlight_id=None):
+    print(f"📋 共 {len(templates)} 个模板:\n")
+    for i, t in enumerate(templates, 1):
+        preview = t.get("preview", "📄")
+        source = "用户" if t.get("user_uploaded") else "内置"
+        marker = " [刚上传]" if highlight_id and t.get("id") == highlight_id else ""
+        print(f"  {i}. {preview} {t['name']} [{source}]{marker}")
+        print(f"     {t.get('description', '')}")
+        print(f"     ID: {t['id']}")
+        print()
+
+
 def cmd_templates(args):
     """List available templates (built-in + user-parsed)."""
     templates = _load_all_templates()
@@ -335,14 +347,7 @@ def cmd_templates(args):
         print("❌ 没有可用的模板")
         return
 
-    print(f"📋 共 {len(templates)} 个模板:\n")
-    for i, t in enumerate(templates, 1):
-        preview = t.get("preview", "📄")
-        source = "用户" if t.get("user_uploaded") else "内置"
-        print(f"  {i}. {preview} {t['name']} [{source}]")
-        print(f"     {t.get('description', '')}")
-        print(f"     ID: {t['id']}")
-        print()
+    _print_templates(templates, getattr(args, "highlight_id", None))
 
 
 def cmd_parse_template(args):
@@ -423,6 +428,9 @@ def cmd_parse_template(args):
         if template_index is not None:
             print(f"   新模板编号: {template_index}")
             print(f"   提示: 回到模板列表后，可直接输入编号 {template_index} 选择这个新风格")
+        print()
+        print("📌 更新后的完整模板列表如下：")
+        _print_templates(all_templates, template_id)
 
     except ImportError as e:
         print(f"❌ 缺少依赖: {e}")

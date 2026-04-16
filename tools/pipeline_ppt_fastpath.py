@@ -246,16 +246,22 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
 
     map_file = write_index_map(skill_dir, docs)
     print(f"WIKI_INDEX_MAP={map_file}")
-    print("\n=== WIKI 文档编号列表（用于第①步输入）===")
 
+    # Write human-readable list to file (terminal output gets truncated by Claude Code)
+    list_file = skill_dir / "output" / "_wiki_doc_list.txt"
+    lines = ["=== WIKI 文档编号列表（用于第①步输入）===", ""]
     current_cat = ""
     for d in docs:
         if d["category"] != current_cat:
             current_cat = d["category"]
-            print(f"\n── {current_cat} ──")
-        print(f"{d['index']:>3}. {d['rel_path']}")
+            lines.append(f"\n── {current_cat} ──")
+        lines.append(f"{d['index']:>3}. {d['rel_path']}")
+    lines.append("\n请输入编号（支持逗号和区间），示例: 1,3,8-12")
+    list_file.write_text("\n".join(lines), encoding="utf-8")
+    print(f"WIKI_DOC_LIST={list_file}")
 
-    print("\n请输入编号（支持逗号和区间），示例: 1,3,8-12")
+    # Also print to terminal (may be truncated, but list file is the primary source)
+    print("\n" + "\n".join(lines))
     return 0
 
 

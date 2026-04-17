@@ -33,10 +33,14 @@ description: "多模态知识管道技能 — 摄入文档(PDF/图片/视频/Off
 
 ## 维基目录
 
-数据统一存放在技能安装目录下（`~/.claude/skills/knowledge-pipline/`）：
+数据统一存放在技能安装目录（SKILL_DIR）下。按优先级自动检测：
+1. `~/.agents/skills/knowledge-pipline`
+2. `~/.claude/skills/knowledge-pipline`
+
+取第一个存在的目录作为 SKILL_DIR（Windows 上 `~` 展开为 `C:\Users\{用户名}`）。
 
 ```
-~/.claude/skills/knowledge-pipline/
+SKILL_DIR/
 ├── SKILL.md              # 本文件
 ├── tools/                # Python 管道脚本
 │   ├── pipeline_ingest.py
